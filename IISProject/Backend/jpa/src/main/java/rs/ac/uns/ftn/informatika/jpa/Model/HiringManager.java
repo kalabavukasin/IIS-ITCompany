@@ -2,16 +2,16 @@ package rs.ac.uns.ftn.informatika.jpa.Model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import java.util.UUID;
+import rs.ac.uns.ftn.informatika.jpa.Enumerations.Role;
 
 @Entity
 @Table(name = "hiring_managers")
 public class HiringManager extends User {
 
-    private UUID departmentId;
+    private Long departmentId;
 
-    public HiringManager() {}
+    public HiringManager() { setRole(Role.HIRING_MANAGER); }
 
-    public UUID getDepartmentId() { return departmentId; }
-    public void setDepartmentId(UUID departmentId) { this.departmentId = departmentId; }
+    public Long getDepartmentId() { return departmentId; }
+    public void setDepartmentId(Long departmentId) { this.departmentId = departmentId; }
 }

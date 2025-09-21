@@ -1,16 +1,15 @@
 package rs.ac.uns.ftn.informatika.jpa.Model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.UuidGenerator;
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "audit_logs", indexes = @Index(name = "ix_audit_time", columnList = "timeUtc"))
 public class AuditLog {
 
-    @Id @UuidGenerator
-    private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -18,7 +17,7 @@ public class AuditLog {
 
     @Column(nullable = false) private String action;
     @Column(nullable = false) private String entityType;
-    @Column(nullable = false) private UUID entityId;
+    @Column(nullable = false) private Long entityId;
 
     @Lob private String beforeDataJson;
     @Lob private String afterDataJson;
@@ -33,8 +32,8 @@ public class AuditLog {
 
     public AuditLog() {}
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
@@ -45,8 +44,8 @@ public class AuditLog {
     public String getEntityType() { return entityType; }
     public void setEntityType(String entityType) { this.entityType = entityType; }
 
-    public UUID getEntityId() { return entityId; }
-    public void setEntityId(UUID entityId) { this.entityId = entityId; }
+    public Long getEntityId() { return entityId; }
+    public void setEntityId(Long entityId) { this.entityId = entityId; }
 
     public String getBeforeDataJson() { return beforeDataJson; }
     public void setBeforeDataJson(String beforeDataJson) { this.beforeDataJson = beforeDataJson; }

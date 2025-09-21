@@ -1,15 +1,14 @@
 package rs.ac.uns.ftn.informatika.jpa.Model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.UuidGenerator;
-import java.util.UUID;
 
 @Entity
 @Table(name = "workflow_stages")
 public class WorkflowStage {
 
-    @Id @UuidGenerator
-    private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workflow_id", nullable = false)
@@ -25,8 +24,8 @@ public class WorkflowStage {
 
     public WorkflowStage() {}
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public WorkflowDef getWorkflow() { return workflow; }
     public void setWorkflow(WorkflowDef workflow) { this.workflow = workflow; }

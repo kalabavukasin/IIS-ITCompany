@@ -1,6 +1,7 @@
 package rs.ac.uns.ftn.informatika.jpa.Model;
 
 import jakarta.persistence.*;
+import rs.ac.uns.ftn.informatika.jpa.Enumerations.Role;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.Seniority;
 
 @Entity
@@ -11,7 +12,7 @@ public class Interviewer extends User {
     @Column(name = "seniority", nullable = false)
     private Seniority seniority;
 
-    public Interviewer() {}
+    public Interviewer() {setRole(Role.INTERVIEWER);}
 
     public Seniority getSeniority() { return seniority; }
     public void setSeniority(Seniority seniority) { this.seniority = seniority; }

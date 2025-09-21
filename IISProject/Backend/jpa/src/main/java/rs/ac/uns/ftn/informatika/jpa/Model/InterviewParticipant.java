@@ -1,17 +1,16 @@
 package rs.ac.uns.ftn.informatika.jpa.Model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.UuidGenerator;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.InterviewParticipantRole;
 
-import java.util.UUID;
 
 @Entity
 @Table(name = "interview_participants")
 public class InterviewParticipant {
 
-    @Id @UuidGenerator
-    private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "interview_id", nullable = false)
@@ -27,8 +26,8 @@ public class InterviewParticipant {
 
     public InterviewParticipant() {}
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public Interview getInterview() { return interview; }
     public void setInterview(Interview interview) { this.interview = interview; }

@@ -1,11 +1,9 @@
 package rs.ac.uns.ftn.informatika.jpa.Model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.UuidGenerator;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.ApplicationStatus;
 
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "applications",
@@ -13,8 +11,9 @@ import java.util.UUID;
                 columnNames = {"candidate_id", "job_posting_id"}))
 public class Application {
 
-    @Id @UuidGenerator
-    private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_posting_id", nullable = false)
@@ -46,8 +45,8 @@ public class Application {
 
     public Application() {}
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public JobPosting getJobPosting() { return jobPosting; }
     public void setJobPosting(JobPosting jobPosting) { this.jobPosting = jobPosting; }

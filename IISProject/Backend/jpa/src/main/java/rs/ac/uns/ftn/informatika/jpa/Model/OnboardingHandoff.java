@@ -1,16 +1,15 @@
 package rs.ac.uns.ftn.informatika.jpa.Model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.UuidGenerator;
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Entity
 @Table(name = "onboarding_handoff")
 public class OnboardingHandoff {
 
-    @Id @UuidGenerator
-    private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "offer_id", unique = true)
@@ -25,8 +24,8 @@ public class OnboardingHandoff {
 
     public OnboardingHandoff() {}
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public Offer getOffer() { return offer; }
     public void setOffer(Offer offer) { this.offer = offer; }
