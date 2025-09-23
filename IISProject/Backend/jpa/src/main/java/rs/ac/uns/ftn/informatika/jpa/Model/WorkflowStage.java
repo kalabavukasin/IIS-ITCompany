@@ -20,8 +20,6 @@ public class WorkflowStage {
     @Column(nullable = false)
     private String name;
 
-    private Integer slaDays;
-
     public WorkflowStage() {}
 
     public Long getId() { return id; }
@@ -36,6 +34,4 @@ public class WorkflowStage {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
-    public Integer getSlaDays() { return slaDays; }
-    public void setSlaDays(Integer slaDays) { this.slaDays = slaDays; }
 }

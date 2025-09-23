@@ -1,6 +1,7 @@
 package rs.ac.uns.ftn.informatika.jpa.Model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.RequestionStatus;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.Seniority;
 
@@ -26,10 +27,10 @@ public class Requestion {
     @Column(nullable = false)
     private String positionTitle;
 
-    @Lob @Column(nullable = false)
+    @NotBlank @Column(nullable = false)
     private String description;
 
-    @Lob
+    @NotBlank
     private String skills;
 
     @Enumerated(EnumType.STRING)
@@ -43,12 +44,13 @@ public class Requestion {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "requestion_status")
-    private RequestionStatus status;
+    private RequestionStatus status = RequestionStatus.DRAFT;
 
     @Column(nullable = false)
-    private OffsetDateTime createdAt;
+    private OffsetDateTime createdAt = OffsetDateTime.now();
 
     private String hiringComment;
+    @NotBlank @Column(nullable = false,length = 200)
     private String name;
 
     public Requestion() {}

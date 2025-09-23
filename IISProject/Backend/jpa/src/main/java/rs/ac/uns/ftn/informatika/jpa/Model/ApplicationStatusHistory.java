@@ -28,7 +28,6 @@ public class ApplicationStatusHistory {
 
     private OffsetDateTime exitedAt;
 
-    @Lob
     private String comment;
 
     @ManyToOne(fetch = FetchType.LAZY)

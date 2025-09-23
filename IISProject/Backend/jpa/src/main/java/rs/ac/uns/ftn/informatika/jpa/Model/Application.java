@@ -27,9 +27,6 @@ public class Application {
     @JoinColumn(name = "workflow_id", nullable = false)
     private WorkflowDef workflow;
 
-    @Column(nullable = false)
-    private Integer workflowVersion;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "current_stage_id", nullable = false)
     private WorkflowStage currentStage;
@@ -39,9 +36,9 @@ public class Application {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "application_status")
-    private ApplicationStatus status; // UI label (optional)
+    private ApplicationStatus status;
 
-    @Lob private String note;
+    private String note;
 
     public Application() {}
 
@@ -56,9 +53,6 @@ public class Application {
 
     public WorkflowDef getWorkflow() { return workflow; }
     public void setWorkflow(WorkflowDef workflow) { this.workflow = workflow; }
-
-    public Integer getWorkflowVersion() { return workflowVersion; }
-    public void setWorkflowVersion(Integer workflowVersion) { this.workflowVersion = workflowVersion; }
 
     public WorkflowStage getCurrentStage() { return currentStage; }
     public void setCurrentStage(WorkflowStage currentStage) { this.currentStage = currentStage; }

@@ -2,6 +2,8 @@ package rs.ac.uns.ftn.informatika.jpa.Model;
 
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "workflow_defs")

@@ -41,7 +41,17 @@ public class WebSecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/activate").permitAll()
+                        .requestMatchers(
+                                "/api/auth/register",
+                                "/api/auth/login",
+                                "/api/auth/activate",
+                                "/api/requestions",
+                                "/api/requestions/mine",
+                                "/api/requestions/to-approve",
+                                "/api/requestions/{id}",
+                                "/api/requestions/{id}/approve",
+                                "/api/requestions/{id}/reject",
+                                "/api/users/{id}").permitAll()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(daoAuthProvider())
