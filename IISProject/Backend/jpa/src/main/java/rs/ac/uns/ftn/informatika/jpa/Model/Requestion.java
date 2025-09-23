@@ -17,11 +17,11 @@ public class Requestion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_hr_id", nullable = false)
-    private HRManager createdBy;
+    private User createdBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hiring_manager_id")
-    private HiringManager hiringManager;
+    private User hiringManager;
 
     @Column(nullable = false)
     private String positionTitle;
@@ -56,11 +56,11 @@ public class Requestion {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public HRManager getCreatedBy() { return createdBy; }
-    public void setCreatedBy(HRManager createdBy) { this.createdBy = createdBy; }
+    public User getCreatedBy() { return createdBy; }
+    public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
 
-    public HiringManager getHiringManager() { return hiringManager; }
-    public void setHiringManager(HiringManager hiringManager) { this.hiringManager = hiringManager; }
+    public User getHiringManager() { return hiringManager; }
+    public void setHiringManager(User hiringManager) { this.hiringManager = hiringManager; }
 
     public String getPositionTitle() { return positionTitle; }
     public void setPositionTitle(String positionTitle) { this.positionTitle = positionTitle; }

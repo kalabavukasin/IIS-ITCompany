@@ -19,7 +19,7 @@ public class OfferApproval {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hiring_manager_id", nullable = false)
-    private HiringManager hiringManager;
+    private User hiringManager;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "decision")
@@ -39,8 +39,8 @@ public class OfferApproval {
     public Offer getOffer() { return offer; }
     public void setOffer(Offer offer) { this.offer = offer; }
 
-    public HiringManager getHiringManager() { return hiringManager; }
-    public void setHiringManager(HiringManager hiringManager) { this.hiringManager = hiringManager; }
+    public User getHiringManager() { return hiringManager; }
+    public void setHiringManager(User hiringManager) { this.hiringManager = hiringManager; }
 
     public OfferApprovalDecision getDecision() { return decision; }
     public void setDecision(OfferApprovalDecision decision) { this.decision = decision; }
