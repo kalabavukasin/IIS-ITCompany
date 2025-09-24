@@ -14,6 +14,7 @@ import rs.ac.uns.ftn.informatika.jpa.Dto.LoginAndRegisterDTO;
 import rs.ac.uns.ftn.informatika.jpa.Model.CandidateProfile;
 import rs.ac.uns.ftn.informatika.jpa.Model.CustomUserDetails;
 import rs.ac.uns.ftn.informatika.jpa.Model.User;
+import rs.ac.uns.ftn.informatika.jpa.Service.CvStorageService;
 import rs.ac.uns.ftn.informatika.jpa.Service.UserService;
 import rs.ac.uns.ftn.informatika.jpa.Util.JwtUtil;
 
@@ -27,18 +28,21 @@ public class AuthController {
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private final CvStorageService cvStorageService;
 
     @Autowired
-    public AuthController(UserService userService, AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+    public AuthController(UserService userService, AuthenticationManager authenticationManager, JwtUtil jwtUtil,
+                          CvStorageService cvStorageService) {
         this.userService = userService;
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.cvStorageService = cvStorageService;
     }
     @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/register")
     public ResponseEntity<Map<String, String>> registerUser(
             @RequestPart("data") LoginAndRegisterDTO.RegisterRequest dto,
-            @RequestPart(value = "cv", required = false) MultipartFile cv) throws IOException {
+            @RequestPart("cv") MultipartFile cv) throws IOException {
 
         Map<String, String> response = new HashMap<>();
 
@@ -54,18 +58,21 @@ public class AuthController {
         user.setPassword(dto.password());
         user.setPhone(dto.phone());
 
+        CvStorageService.SavedCv saved = cvStorageService.save(cv);
+
         CandidateProfile profile = new CandidateProfile();
         profile.setUser(user);
         profile.setFirstName(dto.firstName());
         profile.setLastName(dto.lastName());
         profile.setEmail(dto.email());
         profile.setPhone(dto.phone());
-        profile.setCreatedAt(java.time.OffsetDateTime.now()); // polje postoji u modelu
+        profile.setCreatedAt(java.time.OffsetDateTime.now());
 
         if (cv != null && !cv.isEmpty()) {
-            profile.setCvData(cv.getBytes());         //
-            profile.setCvFilename(cv.getOriginalFilename());
-            profile.setCvContentType(cv.getContentType());
+            profile.setCvPath(saved.path);
+            profile.setCvOriginalName(saved.originalName);
+            profile.setCvMime(saved.mime);
+            profile.setCvSizeBytes(saved.sizeBytes);
         }
         userService.registerUser(user,profile);
         response.put("message", "User registered successfully. Please check your email for activation link.");

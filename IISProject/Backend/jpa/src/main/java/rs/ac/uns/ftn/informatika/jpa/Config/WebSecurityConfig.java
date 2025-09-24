@@ -51,7 +51,10 @@ public class WebSecurityConfig {
                                 "/api/requestions/{id}",
                                 "/api/requestions/{id}/approve",
                                 "/api/requestions/{id}/reject",
-                                "/api/users/{id}").permitAll()
+                                "/api/users/{id}",
+                                "/api/postings/public/open",
+                                "/api/postings/public/{id}",
+                                "/api/applications/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(daoAuthProvider())

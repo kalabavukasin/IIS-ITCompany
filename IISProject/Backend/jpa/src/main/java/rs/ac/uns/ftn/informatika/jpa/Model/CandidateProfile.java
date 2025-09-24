@@ -24,17 +24,18 @@ public class CandidateProfile {
 
     private String phone;
 
-    @Lob
-    @Column(name = "cv_data")
-    private byte[] cvData;
+    @Column(name = "cv_path")
+    private String cvPath;
 
-    @Column(name = "cv_filename")
-    private String cvFilename;
+    @Column(name = "cv_original_name")
+    private String cvOriginalName;
 
-    @Column(name = "cv_content_type")
-    private String cvContentType;
+    @Column(name = "cv_mime")
+    private String cvMime;
 
-    //@Lob private String note;
+    @Column(name = "cv_size_bytes")
+    private Long cvSizeBytes;
+
     @Column(nullable = false)
     private OffsetDateTime createdAt;
 
@@ -58,33 +59,19 @@ public class CandidateProfile {
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
 
-    //public String getNote() { return note; }
-    //public void setNote(String note) { this.note = note; }
-
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
 
-    public byte[] getCvData() {
-        return cvData;
-    }
+    public String getCvPath() { return cvPath; }
+    public void setCvPath(String cvPath) { this.cvPath = cvPath; }
 
-    public String getCvFilename() {
-        return cvFilename;
-    }
+    public String getCvOriginalName() { return cvOriginalName; }
+    public void setCvOriginalName(String cvOriginalName) { this.cvOriginalName = cvOriginalName; }
 
-    public String getCvContentType() {
-        return cvContentType;
-    }
+    public String getCvMime() { return cvMime; }
+    public void setCvMime(String cvMime) { this.cvMime = cvMime; }
 
-    public void setCvData(byte[] cvData) {
-        this.cvData = cvData;
-    }
+    public Long getCvSizeBytes() { return cvSizeBytes; }
+    public void setCvSizeBytes(Long cvSizeBytes) { this.cvSizeBytes = cvSizeBytes; }
 
-    public void setCvFilename(String cvFilename) {
-        this.cvFilename = cvFilename;
-    }
-
-    public void setCvContentType(String cvContentType) {
-        this.cvContentType = cvContentType;
-    }
 }
