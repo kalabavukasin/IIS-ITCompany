@@ -5,6 +5,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationCardDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationDTO;
+import rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationDetailsDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationWithUserDTO;
 import rs.ac.uns.ftn.informatika.jpa.Service.ApplicationService;
 
@@ -35,4 +36,19 @@ public class ApplicationController {
     public List<ApplicationWithUserDTO> getAllCards() {
         return service.getAllCards();
     }
+    @GetMapping("/{id}/details")
+    public ResponseEntity<ApplicationDetailsDTO> details(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getDetails(id));
+    }
+    /*@PostMapping("/{id}/advance")
+    public ResponseEntity<Void> advance(@PathVariable Long id) {
+        cmd.advanceToNextStage(id);
+        return ResponseEntity.noContent().build();
+    }*/
+
+    /*@PostMapping("/{id}/refuse")
+    public ResponseEntity<Void> refuse(@PathVariable Long id) {
+        cmd.refuse(id);
+        return ResponseEntity.noContent().build();
+    }*/
 }

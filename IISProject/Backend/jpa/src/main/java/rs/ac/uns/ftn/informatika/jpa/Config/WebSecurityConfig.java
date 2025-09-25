@@ -56,6 +56,7 @@ public class WebSecurityConfig {
                                 "/api/users/{id}/password",
                                 "/api/postings/public/open",
                                 "/api/postings/public/{id}",
+                                "/api/cv/**",
                                 "/api/applications/**").permitAll()
                         .anyRequest().authenticated()
                 )
