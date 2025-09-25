@@ -94,4 +94,8 @@ public class UserService {
             return 0; // Invalid token
         }
     }
+    @Transactional
+    public User updateUser(User user) {
+        return userRepository.save(user);
+    }
 }

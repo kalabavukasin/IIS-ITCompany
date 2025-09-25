@@ -2,7 +2,9 @@ package rs.ac.uns.ftn.informatika.jpa.Service;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationCardDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationDTO;
+import rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationWithUserDTO;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.ApplicationStatus;
 import rs.ac.uns.ftn.informatika.jpa.Mapper.ApplicationMapper;
 import rs.ac.uns.ftn.informatika.jpa.Model.Application;
@@ -12,6 +14,7 @@ import rs.ac.uns.ftn.informatika.jpa.Repository.JobPostingRepository;
 import rs.ac.uns.ftn.informatika.jpa.Repository.WorkflowStageRepository;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Service
 public class ApplicationService {
@@ -51,5 +54,16 @@ public class ApplicationService {
 
         return ApplicationMapper.toDto(appRepo.save(a));
 
+    }
+    @Transactional
+    public List<ApplicationDTO> listMine(Long candidateId){
+        return appRepo.findByCandidate_IdOrderByAppliedAtDesc(candidateId)
+                .stream().map(ApplicationMapper::toDto).toList();
+    }
+    public List<ApplicationCardDTO> getMyApplicationCards(Long candidateId) {
+        return appRepo.findCardsByCandidateId(candidateId);
+    }
+    public List<ApplicationWithUserDTO> getAllCards() {
+        return appRepo.findAllCards();
     }
 }

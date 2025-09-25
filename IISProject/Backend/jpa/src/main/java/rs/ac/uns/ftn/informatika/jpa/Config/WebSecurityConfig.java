@@ -52,6 +52,8 @@ public class WebSecurityConfig {
                                 "/api/requestions/{id}/approve",
                                 "/api/requestions/{id}/reject",
                                 "/api/users/{id}",
+                                "api/users/{id}/phone",
+                                "/api/users/{id}/password",
                                 "/api/postings/public/open",
                                 "/api/postings/public/{id}",
                                 "/api/applications/**").permitAll()
@@ -86,7 +88,7 @@ public class WebSecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
         cfg.setAllowedOrigins(List.of("http://localhost:4200"));
-        cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH"));
         cfg.setAllowedHeaders(List.of("*"));
         cfg.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
