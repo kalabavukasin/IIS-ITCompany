@@ -19,11 +19,8 @@ public class Evaluation {
     @JoinColumn(name = "interviewer_id", nullable = false)
     private User interviewer;
 
-    @Lob
-    private String competencyScoresJson;
-
-    private String recommendation; // YES | NO | CONDITIONAL
-    @Lob private String comment;
+    private String finalGrade;
+    private String comment;
     private OffsetDateTime createdAt;
 
     public Evaluation() {}
@@ -37,11 +34,8 @@ public class Evaluation {
     public User getInterviewer() { return interviewer; }
     public void setInterviewer(User interviewer) { this.interviewer = interviewer; }
 
-    public String getCompetencyScoresJson() { return competencyScoresJson; }
-    public void setCompetencyScoresJson(String competencyScoresJson) { this.competencyScoresJson = competencyScoresJson; }
-
-    public String getRecommendation() { return recommendation; }
-    public void setRecommendation(String recommendation) { this.recommendation = recommendation; }
+    public String getFinalGrade() { return finalGrade; }
+    public void setFinalGrade(String finalGrade) { this.finalGrade = finalGrade; }
 
     public String getComment() { return comment; }
     public void setComment(String comment) { this.comment = comment; }

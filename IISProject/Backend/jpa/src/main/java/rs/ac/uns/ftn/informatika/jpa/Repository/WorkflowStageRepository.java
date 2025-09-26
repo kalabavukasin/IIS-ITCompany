@@ -7,6 +7,7 @@ import rs.ac.uns.ftn.informatika.jpa.Model.WorkflowStage;
 import java.util.List;
 import java.util.Optional;
 
+
 public interface WorkflowStageRepository extends JpaRepository<WorkflowStage, Long> {
     WorkflowStage findFirstByWorkflow_IdOrderBySortOrderAsc(Long workflowId);
     @Query("""
@@ -24,4 +25,16 @@ public interface WorkflowStageRepository extends JpaRepository<WorkflowStage, Lo
         where s.workflow.id = :defId and s.name = :name
     """)
     Optional<WorkflowStage> findByDefIdAndName(Long defId, String name);
+
+    interface StageNameByWorkflow {
+        Long getWorkflowId();
+        String getName();
+    }
+    @Query("""
+        select s.workflow.id as workflowId, s.name as name
+        from WorkflowStage s
+        where s.workflow.id in :defIds
+        order by s.workflow.id asc, s.sortOrder asc, s.id asc
+    """)
+    List<StageNameByWorkflow> findStageNamesByWorkflowIds(List<Long> defIds);
 }

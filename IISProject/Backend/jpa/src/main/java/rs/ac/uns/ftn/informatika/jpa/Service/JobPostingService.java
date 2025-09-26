@@ -15,19 +15,19 @@ import java.time.OffsetDateTime;
 @Service
 public class JobPostingService {
     private final JobPostingRepository jobPostingRepo;
-    private final WorkflowDefRepository workflowDefRepo;
+    private final WorkflowService workflowService;
 
-    public JobPostingService(JobPostingRepository jobPostingRepository, WorkflowDefRepository workflowDefRepository) {
+    public JobPostingService(JobPostingRepository jobPostingRepository, WorkflowService workflowService) {
         this.jobPostingRepo = jobPostingRepository;
-        this.workflowDefRepo = workflowDefRepository;
+        this.workflowService = workflowService;
     }
     @Transactional
-    public JobPosting createForApprovedRequestion(Requestion r, String workflowName) {
+    public JobPosting createForApprovedRequestion(Requestion r) {
         return jobPostingRepo.findByRequestion_Id(r.getId())
                 .orElseGet(() -> {
-                    WorkflowDef wf = workflowDefRepo.findByNameAndActiveIsTrue(workflowName)
+                    WorkflowDef wf = workflowService.getWorkflowById(r.getPipelineWorkflow().getId())
                             .orElseThrow(() -> new IllegalStateException(
-                                    "WorkflowDef not found or inactive for code=" + workflowName));
+                                    "WorkflowDef not found or inactive for id=" + r.getPipelineWorkflow().getId()));
 
                     JobPosting p = new JobPosting();
                     p.setRequestion(r);

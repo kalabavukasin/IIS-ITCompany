@@ -19,11 +19,6 @@ public class Offer {
     @JoinColumn(name = "application_id", nullable = false)
     private Application application;
 
-    private BigDecimal amount;
-
-    @Lob
-    private String benefitsJson;
-
     private LocalDate startDate;
 
     @Enumerated(EnumType.STRING)
@@ -39,12 +34,6 @@ public class Offer {
 
     public Application getApplication() { return application; }
     public void setApplication(Application application) { this.application = application; }
-
-    public BigDecimal getAmount() { return amount; }
-    public void setAmount(BigDecimal amount) { this.amount = amount; }
-
-    public String getBenefitsJson() { return benefitsJson; }
-    public void setBenefitsJson(String benefitsJson) { this.benefitsJson = benefitsJson; }
 
     public LocalDate getStartDate() { return startDate; }
     public void setStartDate(LocalDate startDate) { this.startDate = startDate; }

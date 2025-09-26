@@ -33,6 +33,7 @@ public class RequestionMapper {
                 ? r.getCreatedBy().getFirstName() + " " + r.getCreatedBy().getLastName()
                 : null;*/
         d.createdById = (r.getCreatedBy() != null) ? r.getCreatedBy().getId() : null;
+        d.pipelineWorkflowId = r.getPipelineWorkflow().getId();
         return d;
     }
 }

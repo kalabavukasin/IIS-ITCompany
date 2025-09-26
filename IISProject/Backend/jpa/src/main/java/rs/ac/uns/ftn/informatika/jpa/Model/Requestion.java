@@ -53,6 +53,10 @@ public class Requestion {
     @NotBlank @Column(nullable = false,length = 200)
     private String name;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pipeline_workflow_id")
+    private WorkflowDef pipelineWorkflow;
+
     public Requestion() {}
 
     public Long getId() { return id; }
@@ -93,4 +97,7 @@ public class Requestion {
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public WorkflowDef getPipelineWorkflow() { return pipelineWorkflow; }
+    public void setPipelineWorkflow(WorkflowDef pipelineWorkflow) { this.pipelineWorkflow = pipelineWorkflow; }
 }

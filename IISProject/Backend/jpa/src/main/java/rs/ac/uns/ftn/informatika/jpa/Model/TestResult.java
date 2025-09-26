@@ -18,9 +18,6 @@ public class TestResult {
     private BigDecimal score;
     private Boolean passed;
 
-    @Lob
-    private String metadataJson;
-
     public TestResult() {}
 
     public Long getId() { return id; }
@@ -35,6 +32,4 @@ public class TestResult {
     public Boolean getPassed() { return passed; }
     public void setPassed(Boolean passed) { this.passed = passed; }
 
-    public String getMetadataJson() { return metadataJson; }
-    public void setMetadataJson(String metadataJson) { this.metadataJson = metadataJson; }
 }

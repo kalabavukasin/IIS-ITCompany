@@ -10,6 +10,7 @@ import rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationWithUserDTO;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.ApplicationStatus;
 import rs.ac.uns.ftn.informatika.jpa.Mapper.ApplicationMapper;
 import rs.ac.uns.ftn.informatika.jpa.Model.Application;
+import rs.ac.uns.ftn.informatika.jpa.Model.WorkflowDef;
 import rs.ac.uns.ftn.informatika.jpa.Repository.ApplicationRepository;
 import rs.ac.uns.ftn.informatika.jpa.Repository.CandidateProfileRepository;
 import rs.ac.uns.ftn.informatika.jpa.Repository.JobPostingRepository;
@@ -17,6 +18,7 @@ import rs.ac.uns.ftn.informatika.jpa.Repository.WorkflowStageRepository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ApplicationService {
@@ -25,16 +27,22 @@ public class ApplicationService {
     private final WorkflowStageRepository stageRepo;
     private final CandidateProfileRepository candidateRepo;
     private final WorkflowService workflowService;
+    private final ApplicationRepository applicationRepository;
 
-    public ApplicationService(ApplicationRepository appRepo,JobPostingRepository postingRepo,
-                              WorkflowStageRepository stageRepo,CandidateProfileRepository candidateRepo,
-                              WorkflowService workflowService) {
+    public ApplicationService(ApplicationRepository appRepo, JobPostingRepository postingRepo,
+                              WorkflowStageRepository stageRepo, CandidateProfileRepository candidateRepo,
+                              WorkflowService workflowService, ApplicationRepository applicationRepository) {
         this.appRepo = appRepo;
         this.postingRepo = postingRepo;
         this.stageRepo = stageRepo;
         this.candidateRepo = candidateRepo;
         this.workflowService = workflowService;
+        this.applicationRepository = applicationRepository;
     }
+    public Optional<Application> getApplicationById(Long id) {
+        return applicationRepository.findById(id);
+    }
+
     @Transactional
     public ApplicationDTO apply(Long postingId, Long candidateId) {
         if (appRepo.existsByJobPosting_IdAndCandidate_Id(postingId, candidateId)) {
@@ -76,7 +84,7 @@ public class ApplicationService {
         var raw = appRepo.findRawDetails(appId)
                 .orElseThrow(() -> new IllegalArgumentException("Application not found: " + appId));
 
-        // 1) CV download URL (npr. /api/cv/{candidateId})
+        // 1) CV download URL
         String cvUrl = null;
         var prof = candidateRepo.findById(raw.candidateId());
         if (prof.isPresent() && prof.get().getCvPath() != null) {
@@ -109,5 +117,19 @@ public class ApplicationService {
                 raw.currentPhase(),
                 phases
         );
+    }
+    @Transactional
+    public ApplicationDTO refuse(Long applicationId, String reason) {
+
+        Application application = appRepo.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found " + applicationId));
+
+
+        application.setNote(reason);
+        application.setStatus(ApplicationStatus.REJECTED);
+
+
+        return ApplicationMapper.toDto(appRepo.save(application));
+
     }
 }

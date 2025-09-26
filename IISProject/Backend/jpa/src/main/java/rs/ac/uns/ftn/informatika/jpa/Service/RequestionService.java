@@ -7,8 +7,10 @@ import rs.ac.uns.ftn.informatika.jpa.Enumerations.RequestionStatus;
 import rs.ac.uns.ftn.informatika.jpa.Mapper.RequestionMapper;
 import rs.ac.uns.ftn.informatika.jpa.Model.Requestion;
 import rs.ac.uns.ftn.informatika.jpa.Model.User;
+import rs.ac.uns.ftn.informatika.jpa.Model.WorkflowDef;
 import rs.ac.uns.ftn.informatika.jpa.Repository.RequestionRepository;
 import org.springframework.transaction.annotation.Transactional;
+import rs.ac.uns.ftn.informatika.jpa.Repository.WorkflowDefRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,10 +20,13 @@ public class RequestionService {
     private final RequestionRepository repo;
     private final UserService userService;
     private final JobPostingService jobPostingService;
-    public RequestionService(RequestionRepository repo, UserService userService, JobPostingService jobPostingService){
+    private final WorkflowService workflowService;
+    public RequestionService(RequestionRepository repo, UserService userService, JobPostingService jobPostingService,
+                             WorkflowService workflowService) {
         this.repo = repo;
         this.userService = userService;
         this.jobPostingService = jobPostingService;
+        this.workflowService = workflowService;
     }
 
     @Transactional
@@ -31,8 +36,12 @@ public class RequestionService {
                 .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
         User hiring = userService.getUserById(Long.valueOf(3))
                 .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
+        WorkflowDef workflow = workflowService.getWorkflowById(dto.pipelineWorkflowId)
+                .orElseThrow(() -> new RuntimeException("Workflow not found with id " + dto.pipelineWorkflowId));
+
         r.setCreatedBy(creator);
         r.setHiringManager(hiring);
+        r.setPipelineWorkflow(workflow);
         return RequestionMapper.toDto(repo.save(r));
     }
     public List<RequestionResponseDTO> list() {
@@ -57,7 +66,7 @@ public class RequestionService {
     public RequestionResponseDTO approve(Long id, Long hiringManagerId,String comment) {
         Requestion r = repo.findById(id).orElseThrow(() -> new RuntimeException("Request not found: " + id));
         if (r.getStatus() == RequestionStatus.APPROVED || r.getStatus() == RequestionStatus.REJECTED || r.getStatus() == RequestionStatus.CLOSED) {
-            return RequestionMapper.toDto(r); // već finalizovan — nista
+            return RequestionMapper.toDto(r); // vec finalizovan — nista
         }
         User hm = userService.getUserById(hiringManagerId)
                 .orElseThrow(() -> new RuntimeException("User not found with id " + hiringManagerId));
@@ -65,7 +74,7 @@ public class RequestionService {
         r.setStatus(RequestionStatus.APPROVED);
         r.setHiringComment(comment);
 
-        jobPostingService.createForApprovedRequestion(r, "Hiring pipeline");
+        jobPostingService.createForApprovedRequestion(r);
 
         return RequestionMapper.toDto(repo.save(r));
     }

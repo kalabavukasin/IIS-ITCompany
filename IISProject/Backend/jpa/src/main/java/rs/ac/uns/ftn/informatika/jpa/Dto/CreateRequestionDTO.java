@@ -15,4 +15,5 @@ public class CreateRequestionDTO {
     @NotBlank public String location;
     @NotNull  @DecimalMin("0.0") public BigDecimal budget;
     @NotBlank public String name;
+    @NotNull public Long pipelineWorkflowId;
 }

@@ -20,5 +20,5 @@ public class RequestionResponseDTO {
     public Long hiringId;
     public Long createdById;
     public String createdByFullName;
-   // public String createdByFullName;
+    public Long pipelineWorkflowId;
 }

@@ -2,25 +2,34 @@ package rs.ac.uns.ftn.informatika.jpa.Service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import rs.ac.uns.ftn.informatika.jpa.Dto.WorkflowSummaryDto;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.ApplicationStatus;
 import rs.ac.uns.ftn.informatika.jpa.Model.Application;
+import rs.ac.uns.ftn.informatika.jpa.Model.WorkflowDef;
 import rs.ac.uns.ftn.informatika.jpa.Model.WorkflowStage;
 import rs.ac.uns.ftn.informatika.jpa.Repository.ApplicationRepository;
+import rs.ac.uns.ftn.informatika.jpa.Repository.WorkflowDefRepository;
 import rs.ac.uns.ftn.informatika.jpa.Repository.WorkflowStageRepository;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class WorkflowService {
     private final ApplicationRepository applicationRepository;
     private final WorkflowStageRepository stageRepository;
+    private final WorkflowDefRepository workflowDefRepository;
 
     public WorkflowService(ApplicationRepository applicationRepository,
-                           WorkflowStageRepository stageRepository) {
+                           WorkflowStageRepository stageRepository,
+                           WorkflowDefRepository workflowDefRepository) {
         this.applicationRepository = applicationRepository;
         this.stageRepository = stageRepository;
+        this.workflowDefRepository = workflowDefRepository;
+    }
+
+    public Optional<WorkflowDef> getWorkflowById(Long id) {
+        return workflowDefRepository.findById(id);
     }
 
     @Transactional
@@ -36,34 +45,6 @@ public class WorkflowService {
                 .map(WorkflowStage::getName)
                 .toList();
     }
-
-    @Transactional
-    public void advanceToNextStage(Long applicationId) {
-        Application app = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));
-
-        Long defId = resolveWorkflowDefId(app);
-        List<WorkflowStage> stages = stageRepository.findAllOrderedByDefId(defId);
-        WorkflowStage next = nextStageLinear(stages, app.getCurrentStage());
-        if (next == null) {
-            // nema sledeće faze – opcionalno postavi finalni status
-            // app.setStatus(ApplicationStatus.COMPLETED);
-            return;
-        }
-        app.setCurrentStage(next);
-        applicationRepository.save(app);
-    }
-
-    @Transactional
-    public void refuse(Long applicationId) {
-        Application app = applicationRepository.findById(applicationId)
-                .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));
-
-        app.setStatus(ApplicationStatus.REJECTED);
-        applicationRepository.save(app);
-    }
-
-    // ====================== helperi ======================
 
     @Transactional
     public Long resolveWorkflowDefId(Application app) {
@@ -100,5 +81,35 @@ public class WorkflowService {
     private int safeIndex(WorkflowStage s) {
         Integer i = s.getSortOrder();
         return i != null ? i : Integer.MAX_VALUE;
+    }
+    @Transactional(readOnly = true)
+    public List<WorkflowSummaryDto> listWorkflowsWithStageNames() {
+
+        List<WorkflowDef> defs = workflowDefRepository.findAll();
+        if (defs.isEmpty()) return List.of();
+
+
+        List<Long> ids = defs.stream().map(WorkflowDef::getId).toList();
+        var rows = stageRepository.findStageNamesByWorkflowIds(ids);
+
+
+        Map<Long, List<String>> byWorkflowId = rows.stream()
+                .collect(Collectors.groupingBy(
+                        WorkflowStageRepository.StageNameByWorkflow::getWorkflowId,
+                        LinkedHashMap::new,
+                        Collectors.mapping(WorkflowStageRepository.StageNameByWorkflow::getName, Collectors.toList())
+                ));
+
+
+        return defs.stream()
+                .sorted(Comparator.comparing(WorkflowDef::getId))
+                .map(d -> new WorkflowSummaryDto(
+                        d.getId(),
+                        d.getName(),
+                        d.getVersion(),
+                        d.getActive(),
+                        byWorkflowId.getOrDefault(d.getId(), List.of())
+                ))
+                .toList();
     }
 }
