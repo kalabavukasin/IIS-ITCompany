@@ -51,7 +51,7 @@ public class TestService {
         invite.setTestUrl(saved.publicUrl);
 
         testInviteRepository.save(invite);
-
+        applicationService.advanceWorkflowOnTestSent(app.getId(), req.triggeredById);
         return saved;
     }
 }

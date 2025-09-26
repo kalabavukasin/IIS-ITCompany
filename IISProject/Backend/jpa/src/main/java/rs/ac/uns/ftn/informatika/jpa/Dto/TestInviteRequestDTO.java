@@ -8,5 +8,6 @@ public class TestInviteRequestDTO {
     public Long applicationId;
     public TestType type;
     public OffsetDateTime activeUntil;
+    public Long triggeredById;
 
 }
