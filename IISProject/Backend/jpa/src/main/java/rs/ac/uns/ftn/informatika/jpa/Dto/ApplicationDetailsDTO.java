@@ -30,6 +30,7 @@ public record ApplicationDetailsDTO (
 
         // Workflow
         String currentPhase,
-        List<String> phases           //["Preselekcija","Test","Intervju","Ponuda"]
+        List<String> phases,           //["Preselekcija","Test","Intervju","Ponuda"]
+        String comment
 )
 { }

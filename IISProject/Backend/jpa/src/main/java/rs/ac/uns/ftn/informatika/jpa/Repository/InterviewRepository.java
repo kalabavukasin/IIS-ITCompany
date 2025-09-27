@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.InterviewStatus;
 import rs.ac.uns.ftn.informatika.jpa.Model.Interview;
+import rs.ac.uns.ftn.informatika.jpa.Model.TestInvite;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -30,4 +31,5 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
             "AND i.status = 'SCHEDULED' " +
             "ORDER BY i.scheduledAt ASC")
     List<Interview> findUpcomingInterviews(@Param("now") OffsetDateTime now);
+    Optional<Interview> findByApplicationId(Long applicationId);
 }

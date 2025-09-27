@@ -29,4 +29,10 @@ public class InterviewController {
         Interview interview = interviewService.scheduleInterview(dto, id);
         return ResponseEntity.noContent().build();
     }
+    @GetMapping("/by-application/{applicationId}/details")
+    public ResponseEntity<?> getTestDetailsByApplication(@PathVariable Long applicationId) {
+        return interviewService.getDetailsByApplicationId(applicationId)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
 }

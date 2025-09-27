@@ -123,7 +123,8 @@ public class ApplicationService {
                 raw.candidatePhone(),
                 cvUrl,
                 raw.currentPhase(),
-                phases
+                phases,
+                raw.comment()
         );
     }
     @Transactional

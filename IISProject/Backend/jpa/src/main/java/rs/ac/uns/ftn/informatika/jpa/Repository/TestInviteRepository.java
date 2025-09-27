@@ -7,4 +7,5 @@ import java.util.Optional;
 
 public interface TestInviteRepository extends JpaRepository<TestInvite, Long> {
     Optional<TestInvite> findTopByApplicationId(Long applicationId);
+    Optional<TestInvite> findByApplicationId(Long applicationId);
 }

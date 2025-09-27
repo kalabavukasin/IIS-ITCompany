@@ -3,7 +3,10 @@ package rs.ac.uns.ftn.informatika.jpa.Service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import rs.ac.uns.ftn.informatika.jpa.Dto.InterviewDetailsDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.InterviewScheduleDTO;
+import rs.ac.uns.ftn.informatika.jpa.Dto.TestDetailsDTO;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.InterviewParticipantRole;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.InterviewStatus;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.InterviewType;
@@ -13,6 +16,8 @@ import rs.ac.uns.ftn.informatika.jpa.Repository.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 @Service
 public class InterviewService {
     private final InterviewRepository interviewRepository;
@@ -115,5 +120,22 @@ public class InterviewService {
 
     public List<InterviewParticipant> getParticipantsByInterview(Long interviewId) {
         return participantRepository.findByInterview_Id(interviewId);
+    }
+    public Optional<InterviewDetailsDTO> getDetailsByApplicationId(Long applicationId) {
+
+        return interviewRepository.findByApplicationId(applicationId)
+                .map(this::mapToDto);
+    }
+
+    private InterviewDetailsDTO mapToDto(Interview inv) {
+
+        return new InterviewDetailsDTO(
+                inv.getId(),
+                inv.getType(),
+                inv.getScheduledAt(),
+                inv.getDurationMinutes(),
+                inv.getLocationOrLink(),
+                inv.getStatus()
+        );
     }
 }

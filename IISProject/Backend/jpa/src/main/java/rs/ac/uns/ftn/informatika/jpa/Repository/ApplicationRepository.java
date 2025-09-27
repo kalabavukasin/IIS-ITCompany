@@ -73,7 +73,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
             u.phone,
             null,
             cs.name,
-            null
+            null,
+            a.note
         )
         from Application a
         join a.jobPosting jp

@@ -90,11 +90,26 @@ public class TestStorageService {
         if (lower.endsWith(".odt")) return "application/vnd.oasis.opendocument.text";
         return "application/octet-stream";
     }
+    public Path resolveAbsolute(String relativePath) {
+        Path root = Paths.get(uploadDir).toAbsolutePath().normalize();
+        return root.resolve(Paths.get(relativePath).getFileName().toString());
+    }
+    public MediaType detectMediaType(String relativePath, String fallbackMime) throws IOException {
+        Path p = resolveAbsolute(relativePath);
+        String probed = Files.probeContentType(p);
+        String mime = (probed != null ? probed : (fallbackMime != null ? fallbackMime : "application/octet-stream")).toLowerCase(Locale.ROOT);
 
-    public static class SavedCv {
-        public String path;
-        public String originalName;
-        public String mime;
-        public long sizeBytes;
+        String lower = relativePath.toLowerCase(Locale.ROOT);
+        if (lower.endsWith(".pdf")) mime = "application/pdf";
+        else if (lower.endsWith(".doc")) mime = "application/msword";
+        else if (lower.endsWith(".docx"))
+            mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        else if (lower.endsWith(".odt")) mime = "application/vnd.oasis.opendocument.text";
+
+        try {
+            return MediaType.parseMediaType(mime);
+        } catch (Exception ignore) {
+            return MediaType.APPLICATION_OCTET_STREAM;
+        }
     }
 }
