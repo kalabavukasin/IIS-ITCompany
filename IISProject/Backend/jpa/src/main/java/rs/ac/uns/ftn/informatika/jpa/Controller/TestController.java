@@ -2,13 +2,12 @@ package rs.ac.uns.ftn.informatika.jpa.Controller;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import rs.ac.uns.ftn.informatika.jpa.Dto.SavedTestDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.TestInviteRequestDTO;
+import rs.ac.uns.ftn.informatika.jpa.Dto.TestRefuseDTO;
 import rs.ac.uns.ftn.informatika.jpa.Service.TestService;
 
 import java.io.IOException;
@@ -31,5 +30,14 @@ public class TestController {
             @RequestPart("data") TestInviteRequestDTO dto,
             @RequestPart("file") MultipartFile file) throws IOException {
         return ResponseEntity.ok(service.createInvite(dto, file));
+    }
+    @PostMapping("/{applicationId}/refuse-with-score")
+    @PreAuthorize("hasAnyAuthority('HR_MANAGER','HIRING_MANAGER')")
+    public ResponseEntity<Void> refuseWithScore(
+            @PathVariable Long applicationId,
+            @RequestBody TestRefuseDTO dto
+    ) {
+        service.refuseWithScore(applicationId, dto);
+        return ResponseEntity.noContent().build();
     }
 }

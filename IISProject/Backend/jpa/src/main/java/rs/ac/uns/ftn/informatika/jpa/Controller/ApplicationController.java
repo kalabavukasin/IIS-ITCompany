@@ -12,9 +12,11 @@ import java.util.List;
 @RequestMapping("/api/applications")
 public class ApplicationController {
     private final ApplicationService service;
+    private final ApplicationService applicationService;
 
-    public ApplicationController(ApplicationService service) {
+    public ApplicationController(ApplicationService service, ApplicationService applicationService) {
         this.service = service;
+        this.applicationService = applicationService;
     }
     @PostMapping("/apply")
     public ApplicationDTO apply(@RequestParam Long postingId, @RequestParam Long candidateId) {
@@ -47,5 +49,12 @@ public class ApplicationController {
     public ResponseEntity<ApplicationDTO> refuse(@PathVariable Long id, @RequestBody RefuseRequestDTO body ) {
         //service.refuse(id,body.getReason());
         return ResponseEntity.ok(service.refuse(id,body.getReason()));
+    }
+    @PostMapping("/{triggeredById}/offer")
+    @PreAuthorize("hasAnyAuthority('HR_MANAGER','HIRING_MANAGER')")
+    public ResponseEntity<Void> makeOffer(@PathVariable Long triggeredById,
+                                          @RequestBody OfferCreateDTO dto) {
+        applicationService.createOffer(dto, triggeredById);
+        return ResponseEntity.noContent().build();
     }
 }

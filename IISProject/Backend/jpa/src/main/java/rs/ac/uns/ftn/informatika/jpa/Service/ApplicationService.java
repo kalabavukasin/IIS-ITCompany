@@ -1,13 +1,12 @@
 package rs.ac.uns.ftn.informatika.jpa.Service;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationCardDTO;
-import rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationDTO;
-import rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationDetailsDTO;
-import rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationWithUserDTO;
+import rs.ac.uns.ftn.informatika.jpa.Dto.*;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.ApplicationStatus;
+import rs.ac.uns.ftn.informatika.jpa.Enumerations.OfferStatus;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.Role;
 import rs.ac.uns.ftn.informatika.jpa.Mapper.ApplicationMapper;
 import rs.ac.uns.ftn.informatika.jpa.Model.*;
@@ -28,13 +27,15 @@ public class ApplicationService {
     private final WorkflowTransitionRepository transitionRepo;
     private final ApplicationStatusHistoryRepository historyRepo;
     private final UserService userService;
+    private final OfferRepository offerRepo;
 
     public ApplicationService(ApplicationRepository appRepo, JobPostingRepository postingRepo,
                               WorkflowStageRepository stageRepo, CandidateProfileRepository candidateRepo,
                               WorkflowService workflowService, ApplicationRepository applicationRepository,
                               WorkflowTransitionRepository transitionRepo,
                               ApplicationStatusHistoryRepository historyRepo,
-                              UserService userService) {
+                              UserService userService,
+                              OfferRepository offerRepo) {
         this.appRepo = appRepo;
         this.postingRepo = postingRepo;
         this.stageRepo = stageRepo;
@@ -44,6 +45,7 @@ public class ApplicationService {
         this.transitionRepo = transitionRepo;
         this.historyRepo = historyRepo;
         this.userService = userService;
+        this.offerRepo = offerRepo;
     }
     public Optional<Application> getApplicationById(Long id) {
         return applicationRepository.findById(id);
@@ -182,7 +184,7 @@ public class ApplicationService {
         return true;
     }
 
-    
+
     @Transactional
     public void advanceWorkflowOnTestSent(Long applicationId, Long triggeredByUserId) {
         // When test is sent, we advance from Preselekcija to Test
@@ -245,5 +247,19 @@ public class ApplicationService {
             history.setExitedAt(exitTime);
             historyRepo.save(history);
         }
+    }
+    @Transactional
+    public void createOffer(OfferCreateDTO dto, Long triggeredById) {
+        Application app = appRepo.findById(dto.applicationId)
+                .orElseThrow(() -> new EntityNotFoundException("Application not found"));
+
+        Offer offer = new Offer();
+        offer.setApplication(app);
+        offer.setStartDate(dto.startDate);
+        offer.setCreatedAt(OffsetDateTime.now());
+        offer.setStatus(OfferStatus.SENT);
+        offerRepo.save(offer);
+
+        advanceWorkflowOnOfferMade(dto.applicationId, triggeredById);
     }
 }

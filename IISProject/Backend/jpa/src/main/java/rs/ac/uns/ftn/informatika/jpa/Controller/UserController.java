@@ -1,11 +1,15 @@
 package rs.ac.uns.ftn.informatika.jpa.Controller;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import rs.ac.uns.ftn.informatika.jpa.Dto.StaffMemberDTO;
 import rs.ac.uns.ftn.informatika.jpa.Service.UserService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
@@ -40,6 +44,12 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Old password is incorrect");
         u.setPassword(passwordEncoder.encode(body.newPassword()));
         userService.updateUser(u);
+    }
+    @GetMapping("/staff")
+    @PreAuthorize("hasAnyAuthority('HR_MANAGER', 'HIRING_MANAGER')")
+    public ResponseEntity<List<StaffMemberDTO>> getStaffMembers() {
+        List<StaffMemberDTO> staffMembers = userService.getStaffMembers();
+        return ResponseEntity.ok(staffMembers);
     }
 
     public record UserDTO(Long id, String firstName, String lastName, String email, String phone) {}

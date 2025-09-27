@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import rs.ac.uns.ftn.informatika.jpa.Dto.LoginAndRegisterDTO;
+import rs.ac.uns.ftn.informatika.jpa.Dto.StaffMemberDTO;
 import rs.ac.uns.ftn.informatika.jpa.Model.CandidateProfile;
 import rs.ac.uns.ftn.informatika.jpa.Model.User;
 import rs.ac.uns.ftn.informatika.jpa.Repository.CandidateProfileRepository;
@@ -18,6 +19,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -49,6 +51,19 @@ public class UserService {
         return userRepository.save(user);
     }
     public boolean emailExists(String email) { return userRepository.findByEmail(email).isPresent();}
+
+    @Transactional(readOnly = true)
+    public List<StaffMemberDTO> getStaffMembers() {
+        List<Role> staffRoles = List.of(Role.HR_MANAGER, Role.HIRING_MANAGER, Role.INTERVIEWER);
+
+        return userRepository.findByRoleIn(staffRoles).stream()
+                .map(user -> new StaffMemberDTO(
+                        user.getId(),
+                        user.getFirstName() + " " + user.getLastName(),
+                        user.getRole().name()
+                ))
+                .collect(Collectors.toList());
+    }
 
     @Transactional
     public User registerUser(User user, CandidateProfile candidateProfile)

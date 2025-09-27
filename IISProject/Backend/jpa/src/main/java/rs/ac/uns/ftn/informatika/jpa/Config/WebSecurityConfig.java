@@ -54,12 +54,14 @@ public class WebSecurityConfig {
                                 "/api/users/{id}",
                                 "api/users/{id}/phone",
                                 "/api/users/{id}/password",
+                                "/api/users/staff",
                                 "/api/postings/public/open",
                                 "/api/postings/public/{id}",
                                 "/api/cv/**",
                                 "/api/applications/**",
                                 "/api/workflows/**",
-                                "/api/tests/**").permitAll()
+                                "/api/tests/**",
+                                "/api/interviews/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(daoAuthProvider())
