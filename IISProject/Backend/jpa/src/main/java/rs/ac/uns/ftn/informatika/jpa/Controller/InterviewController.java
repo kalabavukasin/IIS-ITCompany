@@ -30,9 +30,19 @@ public class InterviewController {
         return ResponseEntity.noContent().build();
     }
     @GetMapping("/by-application/{applicationId}/details")
-    public ResponseEntity<?> getTestDetailsByApplication(@PathVariable Long applicationId) {
+    public ResponseEntity<?> getInterviewDetailsByApplication(@PathVariable Long applicationId) {
         return interviewService.getDetailsByApplicationId(applicationId)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+    @GetMapping
+    public ResponseEntity<?> getInterviewsByInterviewerId(@RequestParam("interviewerId") Long interviewerId) {
+        var result = interviewService.getInterviewsByInterviewerId(interviewerId);
+        return ResponseEntity.ok(result);
+    }
+    @GetMapping("/observed")
+    public ResponseEntity<?> getObservedInterviews(@RequestParam("userId") Long userId) {
+        var result = interviewService.getObservedInterviewsByUserId(userId);
+        return ResponseEntity.ok(result);
     }
 }

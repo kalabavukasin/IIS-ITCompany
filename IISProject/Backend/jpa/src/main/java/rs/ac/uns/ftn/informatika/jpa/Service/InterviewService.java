@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rs.ac.uns.ftn.informatika.jpa.Dto.InterviewDetailsDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.InterviewScheduleDTO;
+import rs.ac.uns.ftn.informatika.jpa.Dto.InterviewToShowDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.TestDetailsDTO;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.InterviewParticipantRole;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.InterviewStatus;
@@ -137,5 +138,13 @@ public class InterviewService {
                 inv.getLocationOrLink(),
                 inv.getStatus()
         );
+    }
+    @Transactional(readOnly = true)
+    public List<InterviewToShowDTO> getInterviewsByInterviewerId(Long interviewerId) {
+        return participantRepository.findInterviewsToShowByInterviewerId(interviewerId);
+    }
+    @Transactional(readOnly = true)
+    public List<InterviewToShowDTO> getObservedInterviewsByUserId(Long userId) {
+        return participantRepository.findInterviewsToShowByUserAndRole(userId,InterviewParticipantRole.OBSERVER);
     }
 }
