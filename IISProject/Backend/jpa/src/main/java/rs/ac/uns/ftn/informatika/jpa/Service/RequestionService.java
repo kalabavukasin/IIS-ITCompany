@@ -34,8 +34,10 @@ public class RequestionService {
         Requestion r = RequestionMapper.toEntity(dto);
         User creator = userService.getUserById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
-        User hiring = userService.getUserById(Long.valueOf(3))
-                .orElseThrow(() -> new RuntimeException("User not found with id " + userId));
+       /* User hiring = userService.getUserById(Long.valueOf(3))
+                .orElseThrow(() -> new RuntimeException("User not found with id " + userId));*/
+        User hiring = userService.pickHiringManager();
+        //requestion.setHiringManager(hiring);
         WorkflowDef workflow = workflowService.getWorkflowById(dto.pipelineWorkflowId)
                 .orElseThrow(() -> new RuntimeException("Workflow not found with id " + dto.pipelineWorkflowId));
 

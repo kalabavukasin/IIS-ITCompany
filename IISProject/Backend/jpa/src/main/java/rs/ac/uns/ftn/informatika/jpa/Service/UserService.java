@@ -1,6 +1,7 @@
 package rs.ac.uns.ftn.informatika.jpa.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -112,5 +113,11 @@ public class UserService {
     @Transactional
     public User updateUser(User user) {
         return userRepository.save(user);
+    }
+    public User pickHiringManager() {
+        return userRepository.findHiringManagersOrderedByOpenRequestions(PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No active hiring manager found"));
     }
 }
