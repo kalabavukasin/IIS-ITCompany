@@ -86,7 +86,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     """)
     Optional<ApplicationDetailsDTO> findRawDetails(Long applicationId);
 
-    @Query("""
+    @Query(""" 
          select wd.id
         from Application a
         left join a.currentStage cs
@@ -94,4 +94,20 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
          where a.id = :appId
         """)
     java.util.Optional<Long> findWorkflowIdByApplicationId(@Param("appId") Long appId);
+
+    @Query("""
+        SELECT a FROM Application a 
+        WHERE a.appliedAt >= :startDate AND a.appliedAt <= :endDate
+    """)
+    List<Application> findApplicationsByDateRange(@Param("startDate") java.time.OffsetDateTime startDate, 
+                                                 @Param("endDate") java.time.OffsetDateTime endDate);
+
+    @Query("""
+        SELECT a FROM Application a 
+        WHERE a.status = :status 
+        AND a.appliedAt >= :startDate AND a.appliedAt <= :endDate
+    """)
+    List<Application> findApplicationsByStatusAndDateRange(@Param("status") rs.ac.uns.ftn.informatika.jpa.Enumerations.ApplicationStatus status,
+                                                          @Param("startDate") java.time.OffsetDateTime startDate, 
+                                                          @Param("endDate") java.time.OffsetDateTime endDate);
 }

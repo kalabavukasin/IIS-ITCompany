@@ -23,4 +23,21 @@ public interface ApplicationStatusHistoryRepository extends JpaRepository<Applic
     @Query("SELECT COUNT(h) FROM ApplicationStatusHistory h " +
             "WHERE h.application.id = :appId")
     Long countByApplicationId(@Param("appId") Long appId);
+
+    @Query("""
+        SELECT h FROM ApplicationStatusHistory h 
+        WHERE h.enteredAt >= :startDate AND h.enteredAt <= :endDate
+        ORDER BY h.enteredAt ASC
+    """)
+    List<ApplicationStatusHistory> findHistoriesByDateRange(@Param("startDate") java.time.OffsetDateTime startDate, 
+                                                           @Param("endDate") java.time.OffsetDateTime endDate);
+
+    @Query("""
+        SELECT h FROM ApplicationStatusHistory h 
+        WHERE h.enteredAt >= :startDate AND h.enteredAt <= :endDate
+        AND h.exitedAt IS NOT NULL
+        ORDER BY h.enteredAt ASC
+    """)
+    List<ApplicationStatusHistory> findCompletedHistoriesByDateRange(@Param("startDate") java.time.OffsetDateTime startDate, 
+                                                                    @Param("endDate") java.time.OffsetDateTime endDate);
 }

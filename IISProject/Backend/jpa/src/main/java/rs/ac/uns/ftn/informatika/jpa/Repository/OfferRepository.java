@@ -30,4 +30,11 @@ public interface OfferRepository extends JpaRepository<Offer, Long> {
     """)
     List<OfferCardDTO> findRecentOffersForCandidate(@Param("candidateId") Long candidateId,
                                                     @Param("cutoff") OffsetDateTime cutoff);
+
+    @Query("""
+        SELECT o FROM Offer o 
+        WHERE o.createdAt >= :startDate AND o.createdAt <= :endDate
+    """)
+    List<rs.ac.uns.ftn.informatika.jpa.Model.Offer> findOffersByDateRange(@Param("startDate") OffsetDateTime startDate, 
+                                                                         @Param("endDate") OffsetDateTime endDate);
 }
