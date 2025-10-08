@@ -63,6 +63,9 @@ public class PdfReportService {
         // Invitation rejection ratio
         addInvitationRejectionSection(document, report, font, boldFont);
 
+        // Rejection percentage
+        addRejectionPercentage(document,report,font,boldFont);
+
         document.close();
         return outputStream.toByteArray();
     }
@@ -213,6 +216,24 @@ public class PdfReportService {
         addTableData(table, report.getInvitationRejectionRatio().getTotalInvited().toString(), font);
         addTableData(table, report.getInvitationRejectionRatio().getTotalRejected().toString(), font);
         addTableData(table, String.format("%.1f%%", report.getInvitationRejectionRatio().getRejectionRate()), font);
+
+        document.add(table);
+    }
+    private void addRejectionPercentage(Document document, ReportDTO report, PdfFont font, PdfFont boldFont) {
+        Paragraph sectionTitle = new Paragraph("PROCENAT ODBIJENIH")
+                .setFont(boldFont)
+                .setFontSize(14)
+                .setMarginTop(20)
+                .setMarginBottom(10);
+        document.add(sectionTitle);
+        Table table = new Table(1).useAllAvailableWidth();
+        table.setMarginBottom(20);
+
+        // Header
+        addTableHeader(table, "Procenat odbijenih ponuda", font, boldFont);
+
+        //Data
+        addTableData(table, report.getOfferRejectionPercentage().toString(), font);
 
         document.add(table);
     }
