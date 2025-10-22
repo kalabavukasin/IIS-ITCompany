@@ -16,7 +16,10 @@
 -- ============================================================
 \echo 'Step 1: Dropping triggers...'
 
+-- Glavni trigger za upravljanje testovima
 DROP TRIGGER IF EXISTS test_expiration_trigger ON test_invites;
+
+-- Dodatni trigeri (ako postoje)
 DROP TRIGGER IF EXISTS applications_audit_trigger ON applications;
 DROP TRIGGER IF EXISTS offers_audit_trigger ON offers;
 DROP TRIGGER IF EXISTS status_history_audit_trigger ON application_status_history;
@@ -43,9 +46,11 @@ DROP FUNCTION IF EXISTS audit_status_history_changes() CASCADE;
 \echo 'Step 3: Dropping functions...'
 
 DROP FUNCTION IF EXISTS calculate_recruitment_metrics(DATE, DATE, BIGINT) CASCADE;
+DROP FUNCTION IF EXISTS generate_comprehensive_recruitment_report(DATE, DATE) CASCADE;
+
+-- Brisanje starih neiskorišćenih funkcija (ako postoje)
 DROP FUNCTION IF EXISTS calculate_job_posting_summary(DATE, DATE) CASCADE;
 DROP FUNCTION IF EXISTS calculate_stage_performance(DATE, DATE) CASCADE;
-DROP FUNCTION IF EXISTS generate_comprehensive_recruitment_report(DATE, DATE) CASCADE;
 
 -- Dodatne funkcije (ako postoje)
 DROP FUNCTION IF EXISTS analyze_stage_performance(DATE, DATE, BIGINT) CASCADE;
@@ -90,6 +95,8 @@ DROP INDEX IF EXISTS idx_audit_entity;
 \echo 'Step 5: Dropping custom types...'
 
 DROP TYPE IF EXISTS recruitment_metrics_type CASCADE;
+
+-- Brisanje starih neiskorišćenih tipova (ako postoje)
 DROP TYPE IF EXISTS stage_performance_type CASCADE;
 DROP TYPE IF EXISTS job_posting_summary_type CASCADE;
 DROP TYPE IF EXISTS audit_data_type CASCADE;

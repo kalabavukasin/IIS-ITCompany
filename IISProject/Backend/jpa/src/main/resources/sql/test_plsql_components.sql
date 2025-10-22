@@ -36,55 +36,10 @@ FROM (
 
 
 -- ============================================================
--- TEST 2: TESTIRANJE JOB POSTING SUMMARY FUNKCIJE
+-- TEST 2: TESTIRANJE COMPREHENSIVE REPORT FUNKCIJE
 -- ============================================================
 \echo ''
-\echo 'TEST 2: calculate_job_posting_summary()'
-\echo '--------------------------------------------'
-
-SELECT 
-    job_posting_name as "Job Posting",
-    total_applications as "Applications",
-    hired_count as "Hired",
-    rejection_count as "Rejected",
-    ROUND(average_processing_days, 2) as "Avg Days",
-    ROUND(success_rate, 2) as "Success Rate %"
-FROM calculate_job_posting_summary(
-    CURRENT_DATE - INTERVAL '90 days',
-    CURRENT_DATE
-)
-LIMIT 5;
-
-\echo 'TEST 2: PASSED ✓'
-
-
--- ============================================================
--- TEST 3: TESTIRANJE STAGE PERFORMANCE FUNKCIJE
--- ============================================================
-\echo ''
-\echo 'TEST 3: calculate_stage_performance()'
-\echo '--------------------------------------------'
-
-SELECT 
-    stage_name as "Stage",
-    entered_count as "Entered",
-    completed_count as "Completed",
-    ROUND(conversion_rate, 2) as "Conversion %",
-    ROUND(average_time_in_days, 2) as "Avg Days"
-FROM calculate_stage_performance(
-    CURRENT_DATE - INTERVAL '90 days',
-    CURRENT_DATE
-)
-LIMIT 5;
-
-\echo 'TEST 3: PASSED ✓'
-
-
--- ============================================================
--- TEST 4: TESTIRANJE COMPREHENSIVE REPORT FUNKCIJE
--- ============================================================
-\echo ''
-\echo 'TEST 4: generate_comprehensive_recruitment_report()'
+\echo 'TEST 2: generate_comprehensive_recruitment_report()'
 \echo '--------------------------------------------'
 
 -- Test samo osnovnih metrika
@@ -100,14 +55,14 @@ FROM generate_comprehensive_recruitment_report(
 WHERE report_section = 'BASIC_METRICS'
 LIMIT 5;
 
-\echo 'TEST 4: PASSED ✓'
+\echo 'TEST 2: PASSED ✓'
 
 
 -- ============================================================
--- TEST 5: TESTIRANJE INDEKSA
+-- TEST 3: TESTIRANJE INDEKSA
 -- ============================================================
 \echo ''
-\echo 'TEST 5: Index Performance Test'
+\echo 'TEST 3: Index Performance Test'
 \echo '--------------------------------------------'
 
 -- Testiranje da li se koriste indeksi
@@ -118,36 +73,53 @@ WHERE application_status = 'HIRED'
   AND applied_at <= CURRENT_DATE
 LIMIT 10;
 
-\echo 'TEST 5: Check EXPLAIN output for "Index Scan" ✓'
+\echo 'TEST 3: Check EXPLAIN output for "Index Scan" ✓'
 
 
 -- ============================================================
--- TEST 6: TESTIRANJE TRIGERA
+-- TEST 4: TESTIRANJE TRIGERA
 -- ============================================================
 \echo ''
-\echo 'TEST 6: Trigger Test (test_expiration_trigger)'
+\echo 'TEST 4: Trigger Test (test_expiration_trigger)'
 \echo '--------------------------------------------'
 
 -- Provera da li trigger postoji
 SELECT 
+    t.tgname as trigger_name,
+    c.relname as table_name,
+    p.proname as function_name,
     CASE 
-        WHEN COUNT(*) > 0 THEN 'Trigger EXISTS ✓'
-        ELSE 'Trigger NOT FOUND ✗'
-    END as trigger_status
+        WHEN t.tgtype & 2 = 2 THEN 'BEFORE'
+        ELSE 'AFTER'
+    END as timing,
+    CASE 
+        WHEN t.tgtype & 4 = 4 THEN 'INSERT '
+        ELSE ''
+    END ||
+    CASE 
+        WHEN t.tgtype & 8 = 8 THEN 'UPDATE '
+        ELSE ''
+    END ||
+    CASE 
+        WHEN t.tgtype & 16 = 16 THEN 'DELETE'
+        ELSE ''
+    END as events,
+    'EXISTS ✓' as status
 FROM pg_trigger t
 JOIN pg_class c ON t.tgrelid = c.oid
+JOIN pg_proc p ON t.tgfoid = p.oid
 WHERE c.relname = 'test_invites'
   AND t.tgname = 'test_expiration_trigger'
   AND NOT t.tgisinternal;
 
-\echo 'TEST 6: PASSED ✓'
+\echo 'TEST 4: PASSED ✓'
 
 
 -- ============================================================
--- TEST 7: TESTIRANJE CUSTOM TIPOVA
+-- TEST 5: TESTIRANJE CUSTOM TIPOVA
 -- ============================================================
 \echo ''
-\echo 'TEST 7: Custom Types Verification'
+\echo 'TEST 5: Custom Types Verification'
 \echo '--------------------------------------------'
 
 -- Lista svih custom tipova
@@ -157,22 +129,17 @@ SELECT
 FROM pg_type t
 WHERE t.typnamespace = 'public'::regnamespace
   AND t.typtype = 'c'
-  AND t.typname IN (
-    'recruitment_metrics_type',
-    'stage_performance_type',
-    'job_posting_summary_type',
-    'audit_data_type'
-  )
+  AND t.typname = 'recruitment_metrics_type'
 ORDER BY typname;
 
-\echo 'TEST 7: PASSED ✓'
+\echo 'TEST 5: PASSED ✓'
 
 
 -- ============================================================
--- TEST 8: PERFORMANCE TEST - COMPLEX QUERY
+-- TEST 6: PERFORMANCE TEST - COMPLEX QUERY
 -- ============================================================
 \echo ''
-\echo 'TEST 8: Performance Test - Complex Report'
+\echo 'TEST 6: Performance Test - Complex Report'
 \echo '--------------------------------------------'
 
 -- Meri vreme izvršavanja kompleksnog report-a
@@ -186,14 +153,14 @@ FROM generate_comprehensive_recruitment_report(
 
 \timing off
 
-\echo 'TEST 8: PASSED ✓'
+\echo 'TEST 6: PASSED ✓'
 
 
 -- ============================================================
--- TEST 9: DATA INTEGRITY TEST
+-- TEST 7: DATA INTEGRITY TEST
 -- ============================================================
 \echo ''
-\echo 'TEST 9: Data Integrity Check'
+\echo 'TEST 7: Data Integrity Check'
 \echo '--------------------------------------------'
 
 -- Provera konzistentnosti podataka
@@ -216,14 +183,14 @@ SELECT
     END as "Status"
 FROM data_check;
 
-\echo 'TEST 9: PASSED ✓'
+\echo 'TEST 7: PASSED ✓'
 
 
 -- ============================================================
--- TEST 10: FUNKCIJA SA NULL PARAMETRIMA
+-- TEST 8: FUNKCIJA SA NULL PARAMETRIMA
 -- ============================================================
 \echo ''
-\echo 'TEST 10: NULL Parameter Handling'
+\echo 'TEST 8: NULL Parameter Handling'
 \echo '--------------------------------------------'
 
 -- Test funkcije sa NULL parametrom
@@ -237,7 +204,7 @@ FROM (
     ) as result
 ) test;
 
-\echo 'TEST 10: PASSED ✓'
+\echo 'TEST 8: PASSED ✓'
 
 
 -- ============================================================
@@ -249,9 +216,8 @@ FROM (
 \echo '================================================'
 \echo ''
 \echo 'Tested Components:'
-\echo '  ✓ 4 Custom Types'
-\echo '  ✓ 4 Functions'
-\echo '  ✓ 1 Comprehensive Report Function'
+\echo '  ✓ 1 Custom Type (recruitment_metrics_type)'
+\echo '  ✓ 2 Functions (calculate_recruitment_metrics + comprehensive report)'
 \echo '  ✓ 1 Trigger + Trigger Function'
 \echo '  ✓ 7 Indexes'
 \echo ''

@@ -19,8 +19,6 @@ DECLARE
     v_start_datetime TIMESTAMP WITH TIME ZONE;
     v_end_datetime TIMESTAMP WITH TIME ZONE;
     v_recruitment_metrics recruitment_metrics_type;
-    v_stage_performance stage_performance_type;
-    v_job_posting_summary job_posting_summary_type;
     
     -- Kursor za iteraciju kroz aplikacije
     applications_cursor CURSOR FOR
