@@ -19,10 +19,12 @@ import java.util.List;
 public class OfferService {
     private final OfferRepository offerRepo;
     private final ApplicationRepository applicationRepo;
+    private final AuditService auditService;
 
-    public OfferService (OfferRepository offerRepo, ApplicationRepository applicationRepo) {
+    public OfferService (OfferRepository offerRepo, ApplicationRepository applicationRepo, AuditService auditService) {
         this.offerRepo = offerRepo;
         this.applicationRepo = applicationRepo;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -32,6 +34,9 @@ public class OfferService {
     }
     @Transactional
     public OfferCardDTO acceptOffer(Long offerId, Long userId) {
+        // Postavi user_id za audit log
+        auditService.setCurrentUserForAudit(userId);
+        
         var o = offerRepo.findById(offerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Offer not found"));
 
@@ -64,6 +69,9 @@ public class OfferService {
     }
     @Transactional
     public OfferCardDTO declineOffer(Long offerId, Long userId) {
+        // Postavi user_id za audit log
+        auditService.setCurrentUserForAudit(userId);
+        
         var o = offerRepo.findById(offerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Offer not found"));
 

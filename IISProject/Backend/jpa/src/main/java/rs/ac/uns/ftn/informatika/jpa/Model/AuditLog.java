@@ -19,8 +19,8 @@ public class AuditLog {
     @Column(nullable = false) private String entityType;
     @Column(nullable = false) private Long entityId;
 
-    @Lob private String beforeDataJson;
-    @Lob private String afterDataJson;
+    @Column(columnDefinition = "TEXT") private String beforeDataJson;
+    @Column(columnDefinition = "TEXT") private String afterDataJson;
 
     private String source;
     private String ipAddr;

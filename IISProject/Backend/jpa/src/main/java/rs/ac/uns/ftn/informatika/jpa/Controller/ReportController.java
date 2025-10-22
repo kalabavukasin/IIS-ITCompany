@@ -11,6 +11,8 @@ import rs.ac.uns.ftn.informatika.jpa.Service.ReportService;
 import rs.ac.uns.ftn.informatika.jpa.Service.PdfReportService;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 @RestController
@@ -133,6 +135,86 @@ public class ReportController {
             logger.severe("Error generating last 30 days PDF report: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // ===== PL/SQL INTEGRATED ENDPOINTS =====
+    
+    /**
+     * Generiše izveštaj koristeći PL/SQL funkcije
+     */
+    @GetMapping(value = "/plsql", produces = "application/json")
+    public ResponseEntity<ReportDTO> generatePlSqlReport(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        
+        try {
+            if (startDate.isAfter(endDate)) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            ReportDTO report = reportService.generateReportWithPlSql(startDate, endDate);
+            return ResponseEntity.ok(report);
+                    
+        } catch (Exception e) {
+            logger.severe("Error generating PL/SQL report: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * Generiše kompleksan PL/SQL izveštaj
+     */
+    @GetMapping(value = "/plsql/comprehensive", produces = "application/json")
+    public ResponseEntity<List<Map<String, Object>>> generateComprehensivePlSqlReport(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        
+        try {
+            if (startDate.isAfter(endDate)) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            List<Map<String, Object>> report = reportService.generateComprehensivePlSqlReport(startDate, endDate);
+            return ResponseEntity.ok(report);
+                    
+        } catch (Exception e) {
+            logger.severe("Error generating comprehensive PL/SQL report: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * Testira performanse indeksa
+     */
+    @GetMapping(value = "/plsql/performance-test", produces = "application/json")
+    public ResponseEntity<Map<String, Object>> testIndexPerformance() {
+        try {
+            Map<String, Object> result = reportService.testIndexPerformance();
+            return ResponseEntity.ok(result);
+                    
+        } catch (Exception e) {
+            logger.severe("Error testing index performance: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * Postavlja trenutnog korisnika za audit log
+     */
+    @PostMapping(value = "/plsql/set-current-user/{userId}")
+    public ResponseEntity<String> setCurrentUserForAudit(@PathVariable Long userId) {
+        try {
+            reportService.setCurrentUserForAudit(userId);
+            return ResponseEntity.ok("Current user set to: " + userId);
+                    
+        } catch (Exception e) {
+            logger.severe("Error setting current user: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
         }
     }
 }

@@ -28,6 +28,7 @@ public class ApplicationService {
     private final ApplicationStatusHistoryRepository historyRepo;
     private final UserService userService;
     private final OfferRepository offerRepo;
+    private final AuditService auditService;
 
     public ApplicationService(ApplicationRepository appRepo, JobPostingRepository postingRepo,
                               WorkflowStageRepository stageRepo, CandidateProfileRepository candidateRepo,
@@ -35,7 +36,8 @@ public class ApplicationService {
                               WorkflowTransitionRepository transitionRepo,
                               ApplicationStatusHistoryRepository historyRepo,
                               UserService userService,
-                              OfferRepository offerRepo) {
+                              OfferRepository offerRepo,
+                              AuditService auditService) {
         this.appRepo = appRepo;
         this.postingRepo = postingRepo;
         this.stageRepo = stageRepo;
@@ -46,6 +48,7 @@ public class ApplicationService {
         this.historyRepo = historyRepo;
         this.userService = userService;
         this.offerRepo = offerRepo;
+        this.auditService = auditService;
     }
     public Optional<Application> getApplicationById(Long id) {
         return applicationRepository.findById(id);
@@ -53,6 +56,9 @@ public class ApplicationService {
 
     @Transactional
     public ApplicationDTO apply(Long postingId, Long candidateId) {
+        // Postavi user_id za audit log
+        auditService.setCurrentUserForAudit(candidateId);
+        
         if (appRepo.existsByJobPosting_IdAndCandidate_Id(postingId, candidateId)) {
             throw new IllegalStateException("Already applied");
         }
@@ -143,6 +149,9 @@ public class ApplicationService {
     }
     @Transactional
     public boolean advanceWorkflow(Long applicationId, String comment, Long triggeredByUserId, Role userRole) {
+        // Postavi user_id za audit log
+        auditService.setCurrentUserForAudit(triggeredByUserId);
+        
         Application app = appRepo.findById(applicationId)
                 .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));
 
@@ -251,6 +260,9 @@ public class ApplicationService {
     }
     @Transactional
     public void createOffer(OfferCreateDTO dto, Long triggeredById) {
+        // Postavi user_id za audit log
+        auditService.setCurrentUserForAudit(triggeredById);
+        
         Application app = appRepo.findById(dto.applicationId)
                 .orElseThrow(() -> new EntityNotFoundException("Application not found"));
 
