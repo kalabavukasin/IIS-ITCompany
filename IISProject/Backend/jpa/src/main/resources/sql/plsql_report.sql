@@ -1,11 +1,4 @@
--- ============================================================
--- PL/SQL Complex Report Function - Simplified Version
--- ============================================================
--- Autor: Extracted from PostgreSQL Database
--- Datum: 2024
--- Opis: Pojednostavljena funkcija za generisanje izvještaja o zapošljavanju
---       Koristi: JEDAN kursor, WITH klauzule, složene SQL upite, GROUP BY, HAVING
--- ============================================================
+
 
 CREATE OR REPLACE FUNCTION generate_comprehensive_recruitment_report(p_start_date DATE, p_end_date DATE)
 RETURNS TABLE(
@@ -20,13 +13,7 @@ DECLARE
     v_end_datetime TIMESTAMP WITH TIME ZONE;
     v_recruitment_metrics recruitment_metrics_type;
     
-    -- JSON za cache-ovanje podataka o fazama (PostgreSQL alternativa za INDEX BY)
-    v_stage_cache JSONB := '{}'::JSONB;
-    v_cache_key TEXT;
-    v_cache_keys TEXT[];
-    v_i INTEGER;
     
-    -- JEDINI KURSOR: Analiza performansi po fazama workflow-a
     stages_cursor CURSOR FOR
         SELECT 
             ws.name as stage_name,
@@ -48,11 +35,6 @@ BEGIN
     v_start_datetime := p_start_date::timestamp with time zone;
     v_end_datetime := p_end_date::timestamp with time zone + interval '23:59:59';
     
-    -- ============================================================
-    -- SEKCIJA 1: OSNOVNE METRIKE
-    -- ============================================================
-    -- Koristi PL/SQL funkciju calculate_recruitment_metrics
-    -- Metrike: ukupno prijava, zaposleni, vreme do zapošljavanja, procent odbijanja ponuda
     SELECT * INTO v_recruitment_metrics 
     FROM calculate_recruitment_metrics(p_start_date, p_end_date);
     
@@ -86,17 +68,7 @@ BEGIN
         v_recruitment_metrics.invitation_rejection_ratio,
         'Percentage of rejected applications';
     
-    -- ============================================================
-    -- SEKCIJA 2: ANALIZA PERFORMANSI PO FAZAMA (KURSOR + JSONB CACHE)
-    -- ============================================================
-    -- Koristi JEDINI KURSOR za detaljnu analizu faza workflow-a
-    -- Metrike: prosečno vreme po fazi, konverzije po fazama
-    -- JSONB cache-uje podatke za dodatne analize (PostgreSQL alternativa za INDEX BY)
     FOR v_stage_record IN stages_cursor LOOP
-        -- Cache-ujemo podatke u JSONB (PostgreSQL alternativa za INDEX BY)
-        v_stage_cache := jsonb_set(v_stage_cache, ARRAY[v_stage_record.stage_name], 
-                                  to_jsonb(COALESCE(v_stage_record.avg_days, 0)));
-        
         RETURN QUERY SELECT 
             'STAGE_PERFORMANCE'::VARCHAR(100),
             v_stage_record.stage_name::VARCHAR(255),
@@ -108,27 +80,6 @@ BEGIN
             ) || '%';
     END LOOP;
     
-    -- ============================================================
-    -- SEKCIJA 2.5: CACHE-OVANE ANALIZE (JSONB CACHE)
-    -- ============================================================
-    -- Koristi JSONB za cache-ovanje podataka (PostgreSQL alternativa za INDEX BY)
-    -- Demonstrira korišćenje složenih PL/SQL tipova
-    v_cache_keys := ARRAY(SELECT jsonb_object_keys(v_stage_cache));
-    
-    FOR v_i IN 1..array_length(v_cache_keys, 1) LOOP
-        v_cache_key := v_cache_keys[v_i];
-        RETURN QUERY SELECT 
-            'CACHED_ANALYSIS'::VARCHAR(100),
-            'Cached: ' || v_cache_key::VARCHAR(255),
-            (v_stage_cache->v_cache_key)::NUMERIC,
-            'Data from JSONB cache - no additional DB queries'::TEXT;
-    END LOOP;
-    
-    -- ============================================================
-    -- SEKCIJA 3: ANALIZA PO OGLASIMA ZA POSAO (WITH klauzula)
-    -- ============================================================
-    -- Koristi WITH klauzulu, GROUP BY, HAVING za analizu po oglasima
-    -- Metrike: broj prijava po oglasu, success rate
     RETURN QUERY
     WITH job_posting_stats AS (
         SELECT 
@@ -149,7 +100,7 @@ BEGIN
         WHERE a.applied_at >= v_start_datetime 
           AND a.applied_at <= v_end_datetime
         GROUP BY jp.id, r.name
-        HAVING COUNT(a.id) > 0  -- HAVING: Samo oglasi sa prijavama
+        HAVING COUNT(a.id) > 0 
         ORDER BY total_applications DESC
     )
     SELECT 
@@ -162,10 +113,6 @@ BEGIN
         ', Success Rate: ' || ROUND(jps.success_rate, 2) || '%'
     FROM job_posting_stats jps;
     
-    -- ============================================================
-    -- SEKCIJA 4: BRZI UVIDI (SQL upit umesto kursora)
-    -- ============================================================
-    -- Koristi složene SQL upite sa SUM i COUNT agregacijama
     RETURN QUERY
     WITH quick_insights AS (
         SELECT 
@@ -191,5 +138,5 @@ END;
 $$ LANGUAGE plpgsql;
 
 COMMENT ON FUNCTION generate_comprehensive_recruitment_report(DATE, DATE) IS 
-'Kompleksna funkcija za izvještaj - koristi JEDAN kursor, JSONB za cache, WITH klauzule, GROUP BY, HAVING, složene SQL upite sa 3+ tabela';
+'Kompleksna funkcija za izvještaj - koristi JEDAN kursor, NESTED tabelu za mesečne trendove, WITH klauzule, GROUP BY, HAVING, složene SQL upite sa 3+ tabela';
 

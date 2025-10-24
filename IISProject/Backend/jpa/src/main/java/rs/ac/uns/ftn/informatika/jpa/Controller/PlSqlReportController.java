@@ -23,7 +23,7 @@ public class PlSqlReportController {
      * Generiše kompleksan PL/SQL izveštaj
      */
     @GetMapping("/comprehensive")
-    public ResponseEntity<List<ReportSection>> generateComprehensiveReport(
+    public ResponseEntity<?> generateComprehensiveReport(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         
@@ -31,7 +31,9 @@ public class PlSqlReportController {
             List<ReportSection> report = plSqlReportService.generateComprehensiveReport(startDate, endDate);
             return ResponseEntity.ok(report);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+            System.err.println("Error in generateComprehensiveReport: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
     }
 

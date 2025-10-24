@@ -29,7 +29,16 @@ public class PlSqlReportService {
     @Transactional(readOnly = true)
     public List<ReportSection> generateComprehensiveReport(LocalDate startDate, LocalDate endDate) {
         try {
+            // Proveri da li funkcija postoji
+            String checkFunctionSql = "SELECT COUNT(*) FROM pg_proc WHERE proname = 'generate_comprehensive_recruitment_report'";
+            Integer functionExists = jdbcTemplate.queryForObject(checkFunctionSql, Integer.class);
+            
+            if (functionExists == null || functionExists == 0) {
+                throw new RuntimeException("Function generate_comprehensive_recruitment_report does not exist in database. Please run the SQL script first.");
+            }
+            
             String sql = "SELECT * FROM generate_comprehensive_recruitment_report(?, ?)";
+            System.out.println("Executing SQL: " + sql + " with params: " + startDate + ", " + endDate);
             
             return jdbcTemplate.query(sql, new ReportSectionRowMapper(), startDate, endDate);
         } catch (Exception e) {
