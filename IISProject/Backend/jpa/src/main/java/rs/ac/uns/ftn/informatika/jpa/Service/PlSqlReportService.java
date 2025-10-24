@@ -18,10 +18,7 @@ public class PlSqlReportService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    /**
-     * Poziva netrivijalnu PL/SQL funkciju za izračunavanje metrika zapošljavanja
-     * Ovo je jedina netrivijalna PL/SQL funkcija implementirana za zadatak
-     */
+
     @Transactional(readOnly = true)
     public Map<String, Object> calculateRecruitmentMetrics(LocalDate startDate, LocalDate endDate, Long jobPostingId) {
         String sql = "SELECT * FROM calculate_recruitment_metrics(?, ?, ?)";
@@ -29,9 +26,6 @@ public class PlSqlReportService {
         return jdbcTemplate.queryForMap(sql, startDate, endDate, jobPostingId);
     }
 
-    /**
-     * Generiše kompleksan izveštaj korišćenjem PL/SQL
-     */
     @Transactional(readOnly = true)
     public List<ReportSection> generateComprehensiveReport(LocalDate startDate, LocalDate endDate) {
         try {
@@ -45,32 +39,22 @@ public class PlSqlReportService {
         }
     }
 
-    /**
-     * Postavlja user_id u session za audit log
-     */
     @Transactional
     public void setCurrentUserId(Long userId) {
         String sql = "SELECT set_current_user_id(?)";
         jdbcTemplate.queryForObject(sql, Long.class, userId);
     }
 
-    /**
-     * Kreira test podatke za demonstraciju performansi
-     */
     @Transactional
     public void createTestData() {
         String sql = "SELECT create_test_data_for_performance()";
         jdbcTemplate.queryForObject(sql, Void.class);
     }
 
-    /**
-     * Testira performanse sa i bez indeksa
-     */
     @Transactional(readOnly = true)
     public PerformanceTestResult testIndexPerformance() {
         PerformanceTestResult result = new PerformanceTestResult();
         
-        // Test bez indeksa (simulacija)
         long startTime = System.currentTimeMillis();
         jdbcTemplate.queryForObject(
             "SELECT COUNT(*) FROM applications a " +
@@ -83,7 +67,6 @@ public class PlSqlReportService {
         return result;
     }
 
-    // Inner classes za rezultate
     public static class ReportSection {
         private String reportSection;
         private String metricName;
@@ -99,7 +82,6 @@ public class PlSqlReportService {
             this.additionalInfo = additionalInfo;
         }
 
-        // Getters and Setters
         public String getReportSection() { return reportSection; }
         public void setReportSection(String reportSection) { this.reportSection = reportSection; }
 
