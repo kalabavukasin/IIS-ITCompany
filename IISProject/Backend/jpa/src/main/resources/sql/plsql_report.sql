@@ -15,19 +15,29 @@ DECLARE
     
     
     stages_cursor CURSOR FOR
+        WITH stage_analysis AS (
+            SELECT 
+                ws.id as stage_id,
+                ws.name as stage_name,
+                COUNT(*) as total_entries,
+                AVG(EXTRACT(EPOCH FROM (ash.exited_at - ash.entered_at))/86400) as avg_days,
+                COUNT(CASE WHEN ash.exited_at IS NOT NULL THEN 1 END) as completed_count,
+                COUNT(CASE WHEN a.application_status = 'REJECTED' THEN 1 END) as rejected_count
+            FROM application_status_history ash
+            JOIN workflow_stages ws ON ash.stage_id = ws.id
+            JOIN applications a ON ash.application_id = a.id
+            WHERE ash.entered_at >= v_start_datetime 
+              AND ash.entered_at <= v_end_datetime
+            GROUP BY ws.id, ws.name
+        )
         SELECT 
-            ws.name as stage_name,
-            COUNT(*) as total_entries,
-            AVG(EXTRACT(EPOCH FROM (ash.exited_at - ash.entered_at))/86400) as avg_days,
-            COUNT(CASE WHEN ash.exited_at IS NOT NULL THEN 1 END) as completed_count
-        FROM application_status_history ash
-        JOIN workflow_stages ws ON ash.stage_id = ws.id
-        LEFT JOIN interviews i ON ash.application_id = i.application_id 
-            AND ws.name = 'Intervju'
-        WHERE ash.entered_at >= v_start_datetime 
-          AND ash.entered_at <= v_end_datetime
-        GROUP BY ws.name
-        ORDER BY total_entries DESC;
+            sa.stage_name,
+            sa.total_entries,
+            sa.avg_days,
+            sa.completed_count,
+            sa.rejected_count
+        FROM stage_analysis sa
+        ORDER BY sa.total_entries DESC;
     
     v_stage_record RECORD;
     
@@ -75,6 +85,7 @@ BEGIN
             COALESCE(v_stage_record.avg_days, 0)::NUMERIC,
             'Entries: ' || v_stage_record.total_entries || 
             ', Completed: ' || v_stage_record.completed_count ||
+            ', Rejected: ' || v_stage_record.rejected_count ||
             ', Conversion Rate: ' || ROUND(
                 (v_stage_record.completed_count::NUMERIC / NULLIF(v_stage_record.total_entries, 0)) * 100, 2
             ) || '%';
@@ -137,6 +148,4 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-COMMENT ON FUNCTION generate_comprehensive_recruitment_report(DATE, DATE) IS 
-'Kompleksna funkcija za izvještaj - koristi JEDAN kursor, NESTED tabelu za mesečne trendove, WITH klauzule, GROUP BY, HAVING, složene SQL upite sa 3+ tabela';
 

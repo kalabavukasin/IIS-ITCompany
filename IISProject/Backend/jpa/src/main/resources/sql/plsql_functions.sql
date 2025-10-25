@@ -1,18 +1,3 @@
--- ============================================================
--- PL/SQL Functions for Recruitment System
--- ============================================================
--- Autor: Extracted from PostgreSQL Database
--- Datum: 2024
--- Opis: Funkcije za izračunavanje kompleksnih metrika i analizu procesa zapošljavanja
--- ============================================================
-
--- ============================================================
--- GLAVNA FUNKCIJA ZA RECRUITMENT METRICS
--- ============================================================
--- Ova funkcija se aktivno koristi u:
--- - ReportService.java (linija 207)
--- - PlSqlReportService.java (linija 27)
--- ============================================================
 
 CREATE OR REPLACE FUNCTION calculate_recruitment_metrics(
     p_start_date DATE, 
@@ -31,11 +16,9 @@ DECLARE
     v_start_datetime TIMESTAMP WITH TIME ZONE;
     v_end_datetime TIMESTAMP WITH TIME ZONE;
 BEGIN
-    -- Konvertujemo datume u timestamp sa timezone
     v_start_datetime := p_start_date::timestamp with time zone;
     v_end_datetime := p_end_date::timestamp with time zone + interval '23:59:59';
     
-    -- Ukupan broj prijava u periodu
     SELECT COUNT(*)
     INTO v_total_applications
     FROM applications a
@@ -43,7 +26,6 @@ BEGIN
       AND a.applied_at <= v_end_datetime
       AND (p_job_posting_id IS NULL OR a.job_posting_id = p_job_posting_id);
     
-    -- Ukupan broj zaposlenih u periodu
     SELECT COUNT(*)
     INTO v_total_hired
     FROM applications a
@@ -52,8 +34,6 @@ BEGIN
       AND a.application_status = 'HIRED'
       AND (p_job_posting_id IS NULL OR a.job_posting_id = p_job_posting_id);
     
-    -- Prosečno vreme do zaposlenja (u danima)
-    -- Računa se od trenutka prijave (applied_at) do završetka finalne faze (MAX exited_at)
     SELECT COALESCE(
         AVG(final_times.time_to_hire), 0
     )
@@ -72,7 +52,6 @@ BEGIN
         GROUP BY a.id, a.applied_at
     ) final_times;
     
-    -- Procent odbijanja ponuda
     SELECT COALESCE(
         (COUNT(CASE WHEN o.offer_status = 'DECLINED' THEN 1 END)::NUMERIC / 
          NULLIF(COUNT(*), 0)) * 100, 0
@@ -84,7 +63,6 @@ BEGIN
       AND o.created_at <= v_end_datetime
       AND (p_job_posting_id IS NULL OR a.job_posting_id = p_job_posting_id);
     
-    -- Odnos pozivani/odbijeni
     SELECT COALESCE(
         (COUNT(CASE WHEN a.application_status = 'REJECTED' THEN 1 END)::NUMERIC / 
          NULLIF(COUNT(*), 0)) * 100, 0
@@ -95,7 +73,6 @@ BEGIN
       AND a.applied_at <= v_end_datetime
       AND (p_job_posting_id IS NULL OR a.job_posting_id = p_job_posting_id);
     
-    -- Kreiranje rezultata
     v_result := (
         v_total_applications,
         v_total_hired,
@@ -110,5 +87,3 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-COMMENT ON FUNCTION calculate_recruitment_metrics(DATE, DATE, BIGINT) IS 
-'Izračunava kompleksne metrike performansi procesa zapošljavanja za zadati period. Koristi se u ReportService i PlSqlReportService.';
