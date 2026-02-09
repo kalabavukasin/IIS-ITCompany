@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
-// @Service // Onemogućeno automatsko pokretanje - PL/SQL skripte su ručno pokrenute jednom preko psql-a
+
 public class PlSqlInitializationService implements ApplicationRunner {
 
     private static final Logger logger = Logger.getLogger(PlSqlInitializationService.class.getName());
