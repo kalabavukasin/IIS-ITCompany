@@ -1,21 +1,20 @@
 package rs.ac.uns.ftn.informatika.jpa.Model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.UuidGenerator;
-import rs.ac.uns.ftn.informatika.jpa.Enumerations.RoleType;
+import rs.ac.uns.ftn.informatika.jpa.Enumerations.Role;
 
-import java.util.UUID;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 
 @Entity
 @Table(name = "workflow_transitions")
 public class WorkflowTransition {
 
-    @Id @UuidGenerator
-    private UUID id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "workflow_id", nullable = false)
-    private WorkflowDef workflow;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "from_stage_id", nullable = false)
@@ -25,23 +24,19 @@ public class WorkflowTransition {
     @JoinColumn(name = "to_stage_id", nullable = false)
     private WorkflowStage toStage;
 
+    @ElementCollection(targetClass = Role.class, fetch = FetchType.EAGER)
+    @CollectionTable(name = "workflow_transition_roles", joinColumns = @JoinColumn(name = "transition_id"))
     @Enumerated(EnumType.STRING)
-    @Column(name = "allowed_role", nullable = false)
-    private RoleType allowedRole; // KO SME da izvrši tranziciju (ADMIN, HR_MANAGER, ...)
+    @Column(name = "role", nullable = false)
+    private Set<Role> allowedRoles = new HashSet<>();
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String conditionExprJson;
-
-    @Lob
-    private String autoActionsJson;
 
     public WorkflowTransition() {}
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
-
-    public WorkflowDef getWorkflow() { return workflow; }
-    public void setWorkflow(WorkflowDef workflow) { this.workflow = workflow; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public WorkflowStage getFromStage() { return fromStage; }
     public void setFromStage(WorkflowStage fromStage) { this.fromStage = fromStage; }
@@ -52,9 +47,20 @@ public class WorkflowTransition {
     public String getConditionExprJson() { return conditionExprJson; }
     public void setConditionExprJson(String conditionExprJson) { this.conditionExprJson = conditionExprJson; }
 
-    public String getAutoActionsJson() { return autoActionsJson; }
-    public void setAutoActionsJson(String autoActionsJson) { this.autoActionsJson = autoActionsJson; }
+    public Set<Role> getAllowedRoles() {
+        return allowedRoles;
+    }
 
-    public RoleType getAllowedRole() { return allowedRole; }
-    public void setAllowedRole(RoleType allowedRole) { this.allowedRole = allowedRole; }
+    public void allowRole(Role role) {
+        if (role != null) allowedRoles.add(role);
+    }
+
+    public void disallowRole(Role role) {
+        if (role != null) allowedRoles.remove(role);
+    }
+
+    public void setAllowedRoles(Set<Role> roles) {
+        this.allowedRoles.clear();
+        if (roles != null) this.allowedRoles.addAll(roles);
+    }
 }

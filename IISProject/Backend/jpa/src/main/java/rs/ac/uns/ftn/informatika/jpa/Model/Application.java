@@ -1,11 +1,9 @@
 package rs.ac.uns.ftn.informatika.jpa.Model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.UuidGenerator;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.ApplicationStatus;
 
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "applications",
@@ -13,8 +11,9 @@ import java.util.UUID;
                 columnNames = {"candidate_id", "job_posting_id"}))
 public class Application {
 
-    @Id @UuidGenerator
-    private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_posting_id", nullable = false)
@@ -28,9 +27,6 @@ public class Application {
     @JoinColumn(name = "workflow_id", nullable = false)
     private WorkflowDef workflow;
 
-    @Column(nullable = false)
-    private Integer workflowVersion;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "current_stage_id", nullable = false)
     private WorkflowStage currentStage;
@@ -40,14 +36,14 @@ public class Application {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "application_status")
-    private ApplicationStatus status; // UI label (optional)
+    private ApplicationStatus status;
 
-    @Lob private String note;
+    private String note;
 
     public Application() {}
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public JobPosting getJobPosting() { return jobPosting; }
     public void setJobPosting(JobPosting jobPosting) { this.jobPosting = jobPosting; }
@@ -57,9 +53,6 @@ public class Application {
 
     public WorkflowDef getWorkflow() { return workflow; }
     public void setWorkflow(WorkflowDef workflow) { this.workflow = workflow; }
-
-    public Integer getWorkflowVersion() { return workflowVersion; }
-    public void setWorkflowVersion(Integer workflowVersion) { this.workflowVersion = workflowVersion; }
 
     public WorkflowStage getCurrentStage() { return currentStage; }
     public void setCurrentStage(WorkflowStage currentStage) { this.currentStage = currentStage; }

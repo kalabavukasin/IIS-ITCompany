@@ -1,29 +1,23 @@
 package rs.ac.uns.ftn.informatika.jpa.Model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.UuidGenerator;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.OfferStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "offers")
 public class Offer {
 
-    @Id @UuidGenerator
-    private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "application_id", nullable = false)
     private Application application;
-
-    private BigDecimal amount;
-
-    @Lob
-    private String benefitsJson;
 
     private LocalDate startDate;
 
@@ -35,17 +29,11 @@ public class Offer {
 
     public Offer() {}
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public Application getApplication() { return application; }
     public void setApplication(Application application) { this.application = application; }
-
-    public BigDecimal getAmount() { return amount; }
-    public void setAmount(BigDecimal amount) { this.amount = amount; }
-
-    public String getBenefitsJson() { return benefitsJson; }
-    public void setBenefitsJson(String benefitsJson) { this.benefitsJson = benefitsJson; }
 
     public LocalDate getStartDate() { return startDate; }
     public void setStartDate(LocalDate startDate) { this.startDate = startDate; }

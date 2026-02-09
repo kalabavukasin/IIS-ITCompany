@@ -1,38 +1,22 @@
 package rs.ac.uns.ftn.informatika.jpa.Model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.UuidGenerator;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.JobPostingStatus;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "job_postings")
 public class JobPosting {
 
-    @Id @UuidGenerator
-    private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "requisition_id", nullable = false)
-    private Requestion requisition;
-
-    @Column(nullable = false)
-    private String title;
-
-    @Lob @Column(nullable = false)
-    private String description;
-
-    @Column(name = "location")
-    private String location;
-
-    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "work_mode_id")
-    private WorkMode workMode;
-
-    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "language_id")
-    private Language language;
+    @JoinColumn(name = "requestion_id", nullable = false)
+    private Requestion requestion;
 
     private LocalDate validFrom;
     private LocalDate validTo;
@@ -48,30 +32,13 @@ public class JobPosting {
     @JoinColumn(name = "pipeline_workflow_id")
     private WorkflowDef pipelineWorkflow;
 
-    private Integer pipelineWorkflowVersion;
-
     public JobPosting() {}
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public Requestion getRequisition() { return requisition; }
-    public void setRequisition(Requestion requisition) { this.requisition = requisition; }
-
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
-
-    public WorkMode getWorkMode() { return workMode; }
-    public void setWorkMode(WorkMode workMode) { this.workMode = workMode; }
-
-    public Language getLanguage() { return language; }
-    public void setLanguage(Language language) { this.language = language; }
+    public Requestion getRequestion() { return requestion; }
+    public void setRequestion(Requestion requisition) { this.requestion = requisition; }
 
     public LocalDate getValidFrom() { return validFrom; }
     public void setValidFrom(LocalDate validFrom) { this.validFrom = validFrom; }
@@ -88,6 +55,4 @@ public class JobPosting {
     public WorkflowDef getPipelineWorkflow() { return pipelineWorkflow; }
     public void setPipelineWorkflow(WorkflowDef pipelineWorkflow) { this.pipelineWorkflow = pipelineWorkflow; }
 
-    public Integer getPipelineWorkflowVersion() { return pipelineWorkflowVersion; }
-    public void setPipelineWorkflowVersion(Integer pipelineWorkflowVersion) { this.pipelineWorkflowVersion = pipelineWorkflowVersion; }
 }

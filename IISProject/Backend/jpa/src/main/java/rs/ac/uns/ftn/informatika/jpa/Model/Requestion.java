@@ -1,36 +1,36 @@
 package rs.ac.uns.ftn.informatika.jpa.Model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.UuidGenerator;
+import jakarta.validation.constraints.NotBlank;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.RequestionStatus;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.Seniority;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "requestions")
 public class Requestion {
 
-    @Id @UuidGenerator
-    private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_hr_id", nullable = false)
-    private HRManager createdBy;
+    private User createdBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hiring_manager_id")
-    private HiringManager hiringManager;
+    private User hiringManager;
 
     @Column(nullable = false)
     private String positionTitle;
 
-    @Lob @Column(nullable = false)
+    @NotBlank @Column(nullable = false)
     private String description;
 
-    @Lob
+    @NotBlank
     private String skills;
 
     @Enumerated(EnumType.STRING)
@@ -44,24 +44,29 @@ public class Requestion {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "requestion_status")
-    private RequestionStatus status;
+    private RequestionStatus status = RequestionStatus.DRAFT;
 
     @Column(nullable = false)
-    private OffsetDateTime createdAt;
+    private OffsetDateTime createdAt = OffsetDateTime.now();
 
     private String hiringComment;
+    @NotBlank @Column(nullable = false,length = 200)
     private String name;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pipeline_workflow_id")
+    private WorkflowDef pipelineWorkflow;
 
     public Requestion() {}
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public HRManager getCreatedBy() { return createdBy; }
-    public void setCreatedBy(HRManager createdBy) { this.createdBy = createdBy; }
+    public User getCreatedBy() { return createdBy; }
+    public void setCreatedBy(User createdBy) { this.createdBy = createdBy; }
 
-    public HiringManager getHiringManager() { return hiringManager; }
-    public void setHiringManager(HiringManager hiringManager) { this.hiringManager = hiringManager; }
+    public User getHiringManager() { return hiringManager; }
+    public void setHiringManager(User hiringManager) { this.hiringManager = hiringManager; }
 
     public String getPositionTitle() { return positionTitle; }
     public void setPositionTitle(String positionTitle) { this.positionTitle = positionTitle; }
@@ -92,4 +97,7 @@ public class Requestion {
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public WorkflowDef getPipelineWorkflow() { return pipelineWorkflow; }
+    public void setPipelineWorkflow(WorkflowDef pipelineWorkflow) { this.pipelineWorkflow = pipelineWorkflow; }
 }

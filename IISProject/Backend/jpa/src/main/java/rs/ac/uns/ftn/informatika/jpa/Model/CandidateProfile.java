@@ -1,16 +1,15 @@
 package rs.ac.uns.ftn.informatika.jpa.Model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.UuidGenerator;
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "candidate_profiles")
 public class CandidateProfile {
 
-    @Id @UuidGenerator
-    private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -24,15 +23,26 @@ public class CandidateProfile {
     private String email;
 
     private String phone;
-    private String cvUrl;
 
-    @Lob private String note;
-    @Column(nullable = false) private OffsetDateTime createdAt;
+    @Column(name = "cv_path")
+    private String cvPath;
+
+    @Column(name = "cv_original_name")
+    private String cvOriginalName;
+
+    @Column(name = "cv_mime")
+    private String cvMime;
+
+    @Column(name = "cv_size_bytes")
+    private Long cvSizeBytes;
+
+    @Column(nullable = false)
+    private OffsetDateTime createdAt;
 
     public CandidateProfile() {}
 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
@@ -49,12 +59,19 @@ public class CandidateProfile {
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
 
-    public String getCvUrl() { return cvUrl; }
-    public void setCvUrl(String cvUrl) { this.cvUrl = cvUrl; }
-
-    public String getNote() { return note; }
-    public void setNote(String note) { this.note = note; }
-
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getCvPath() { return cvPath; }
+    public void setCvPath(String cvPath) { this.cvPath = cvPath; }
+
+    public String getCvOriginalName() { return cvOriginalName; }
+    public void setCvOriginalName(String cvOriginalName) { this.cvOriginalName = cvOriginalName; }
+
+    public String getCvMime() { return cvMime; }
+    public void setCvMime(String cvMime) { this.cvMime = cvMime; }
+
+    public Long getCvSizeBytes() { return cvSizeBytes; }
+    public void setCvSizeBytes(Long cvSizeBytes) { this.cvSizeBytes = cvSizeBytes; }
+
 }
