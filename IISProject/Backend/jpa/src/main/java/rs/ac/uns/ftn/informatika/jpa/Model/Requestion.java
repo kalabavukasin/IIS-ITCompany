@@ -44,7 +44,7 @@ public class Requestion {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "requestion_status")
-    private RequestionStatus status = RequestionStatus.DRAFT;
+    private RequestionStatus status = RequestionStatus.PENDING_APPROVAL;
 
     @Column(nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();

@@ -53,6 +53,52 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     List<rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationWithUserDTO> findAllCards();
 
     @Query("""
+        select new rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationWithUserDTO(
+            a.id,
+            cast(a.status as string),
+            cs.name,
+            jp.id,
+            r.name,
+            r.description,
+            r.location,
+            u.id,
+            concat(u.firstName, ' ', u.lastName),
+            jp.validTo
+        )
+        from Application a
+        join a.candidate u
+        join a.jobPosting jp
+        join jp.requestion r
+        left join a.currentStage cs
+        where r.createdBy.id = :hrId
+        order by a.id desc
+    """)
+    List<rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationWithUserDTO> findCardsByCreatedByHr(@Param("hrId") Long hrId);
+
+    @Query("""
+        select new rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationWithUserDTO(
+            a.id,
+            cast(a.status as string),
+            cs.name,
+            jp.id,
+            r.name,
+            r.description,
+            r.location,
+            u.id,
+            concat(u.firstName, ' ', u.lastName),
+            jp.validTo
+        )
+        from Application a
+        join a.candidate u
+        join a.jobPosting jp
+        join jp.requestion r
+        left join a.currentStage cs
+        where r.hiringManager.id = :hmId
+        order by a.id desc
+    """)
+    List<rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationWithUserDTO> findCardsByHiringManager(@Param("hmId") Long hmId);
+
+    @Query("""
         select new rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationDetailsDTO(
             a.id,
             cast(a.status as string),

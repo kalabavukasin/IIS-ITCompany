@@ -57,7 +57,7 @@ public class ApplicationService {
     @Transactional
     public ApplicationDTO apply(Long postingId, Long candidateId) {
         // Postavi user_id za audit log
-        auditService.setCurrentUserForAudit(candidateId);
+        //auditService.setCurrentUserForAudit(candidateId);
         
         if (appRepo.existsByJobPosting_IdAndCandidate_Id(postingId, candidateId)) {
             throw new IllegalStateException("Already applied");
@@ -92,6 +92,12 @@ public class ApplicationService {
     }
     public List<ApplicationWithUserDTO> getAllCards() {
         return appRepo.findAllCards();
+    }
+    public List<ApplicationWithUserDTO> getCardsByCreatedByHr(Long hrId) {
+        return appRepo.findCardsByCreatedByHr(hrId);
+    }
+    public List<ApplicationWithUserDTO> getCardsByHiringManager(Long hmId) {
+        return appRepo.findCardsByHiringManager(hmId);
     }
     @Transactional
     public ApplicationDetailsDTO getDetails(Long appId) {
@@ -150,7 +156,7 @@ public class ApplicationService {
     @Transactional
     public boolean advanceWorkflow(Long applicationId, String comment, Long triggeredByUserId, Role userRole) {
         // Postavi user_id za audit log
-        auditService.setCurrentUserForAudit(triggeredByUserId);
+        //auditService.setCurrentUserForAudit(triggeredByUserId);
         
         Application app = appRepo.findById(applicationId)
                 .orElseThrow(() -> new IllegalArgumentException("Application not found: " + applicationId));
@@ -261,7 +267,7 @@ public class ApplicationService {
     @Transactional
     public void createOffer(OfferCreateDTO dto, Long triggeredById) {
         // Postavi user_id za audit log
-        auditService.setCurrentUserForAudit(triggeredById);
+        //auditService.setCurrentUserForAudit(triggeredById);
         
         Application app = appRepo.findById(dto.applicationId)
                 .orElseThrow(() -> new EntityNotFoundException("Application not found"));

@@ -5,6 +5,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import rs.ac.uns.ftn.informatika.jpa.Dto.*;
 import rs.ac.uns.ftn.informatika.jpa.Service.ApplicationService;
+import rs.ac.uns.ftn.informatika.jpa.Util.SecurityUtils;
 
 import java.util.List;
 
@@ -18,42 +19,59 @@ public class ApplicationController {
         this.service = service;
         this.applicationService = applicationService;
     }
+
     @PostMapping("/apply")
-    public ApplicationDTO apply(@RequestParam Long postingId, @RequestParam Long candidateId) {
+    public ApplicationDTO apply(@RequestParam Long postingId) {
+        Long candidateId = SecurityUtils.getCurrentUserId();
         return service.apply(postingId, candidateId);
     }
+
     @GetMapping("/mine")
     @PreAuthorize("hasAuthority('CANDIDATE')")
-    public List<ApplicationDTO> mine(@RequestParam Long candidateId) {
-        return service.listMine(candidateId); // vrati DTO liste
+    public List<ApplicationDTO> mine() {
+        Long candidateId = SecurityUtils.getCurrentUserId();
+        return service.listMine(candidateId);
     }
-    @GetMapping("/{candidateId}/cards")
-    public ResponseEntity<List<ApplicationCardDTO>> myCards(@PathVariable Long candidateId) {
+
+    @GetMapping("/my-cards")
+    public ResponseEntity<List<ApplicationCardDTO>> myCards() {
+        Long candidateId = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(service.getMyApplicationCards(candidateId));
     }
+
     @GetMapping("/cards")
     public List<ApplicationWithUserDTO> getAllCards() {
         return service.getAllCards();
     }
+
+    @GetMapping("/cards/my-created")
+    @PreAuthorize("hasAuthority('HR_MANAGER')")
+    public List<ApplicationWithUserDTO> getCardsByCreatedByHr() {
+        Long hrId = SecurityUtils.getCurrentUserId();
+        return service.getCardsByCreatedByHr(hrId);
+    }
+
+    @GetMapping("/cards/my-managed")
+    @PreAuthorize("hasAuthority('HIRING_MANAGER')")
+    public List<ApplicationWithUserDTO> getCardsByHiringManager() {
+        Long hmId = SecurityUtils.getCurrentUserId();
+        return service.getCardsByHiringManager(hmId);
+    }
+
     @GetMapping("/{id}/details")
     public ResponseEntity<ApplicationDetailsDTO> details(@PathVariable Long id) {
         return ResponseEntity.ok(service.getDetails(id));
     }
-    /*@PostMapping("/{id}/advance")
-    public ResponseEntity<Void> advance(@PathVariable Long id) {
-        cmd.advanceToNextStage(id);
-        return ResponseEntity.noContent().build();
-    }*/
 
     @PostMapping("/{id}/refuse")
-    public ResponseEntity<ApplicationDTO> refuse(@PathVariable Long id, @RequestBody RefuseRequestDTO body ) {
-        //service.refuse(id,body.getReason());
-        return ResponseEntity.ok(service.refuse(id,body.getReason()));
+    public ResponseEntity<ApplicationDTO> refuse(@PathVariable Long id, @RequestBody RefuseRequestDTO body) {
+        return ResponseEntity.ok(service.refuse(id, body.getReason()));
     }
-    @PostMapping("/{triggeredById}/offer")
+
+    @PostMapping("/offer")
     @PreAuthorize("hasAnyAuthority('HR_MANAGER','HIRING_MANAGER')")
-    public ResponseEntity<Void> makeOffer(@PathVariable Long triggeredById,
-                                          @RequestBody OfferCreateDTO dto) {
+    public ResponseEntity<Void> makeOffer(@RequestBody OfferCreateDTO dto) {
+        Long triggeredById = SecurityUtils.getCurrentUserId();
         applicationService.createOffer(dto, triggeredById);
         return ResponseEntity.noContent().build();
     }

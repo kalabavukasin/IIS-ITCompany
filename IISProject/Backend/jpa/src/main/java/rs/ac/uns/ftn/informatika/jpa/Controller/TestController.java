@@ -14,6 +14,7 @@ import rs.ac.uns.ftn.informatika.jpa.Dto.TestInviteRequestDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.TestRefuseDTO;
 import rs.ac.uns.ftn.informatika.jpa.Service.TestService;
 import rs.ac.uns.ftn.informatika.jpa.Service.TestStorageService;
+import rs.ac.uns.ftn.informatika.jpa.Util.SecurityUtils;
 
 import java.io.IOException;
 
@@ -36,6 +37,7 @@ public class TestController {
     public ResponseEntity<SavedTestDTO> invite(
             @RequestPart("data") TestInviteRequestDTO dto,
             @RequestPart("file") MultipartFile file) throws IOException {
+        dto.triggeredById = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(service.createInvite(dto, file));
     }
     @PostMapping("/{applicationId}/refuse-with-score")
