@@ -1,7 +1,9 @@
 package rs.ac.uns.ftn.informatika.jpa.Controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import rs.ac.uns.ftn.informatika.jpa.Dto.OfferCreateDTO;
 import rs.ac.uns.ftn.informatika.jpa.Service.OfferService;
 import rs.ac.uns.ftn.informatika.jpa.Util.SecurityUtils;
 
@@ -13,6 +15,14 @@ public class OfferController {
 
     public OfferController(OfferService offerService) {
         this.offerService = offerService;
+    }
+
+    @PostMapping
+    @PreAuthorize("hasAnyAuthority('HR_MANAGER','HIRING_MANAGER')")
+    public ResponseEntity<Void> createOffer(@RequestBody OfferCreateDTO dto) {
+        Long triggeredById = SecurityUtils.getCurrentUserId();
+        offerService.createOffer(dto, triggeredById);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/my-recent")

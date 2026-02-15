@@ -3,7 +3,6 @@ package rs.ac.uns.ftn.informatika.jpa.Service;
 import org.springframework.stereotype.Service;
 import rs.ac.uns.ftn.informatika.jpa.Dto.JobPostingCardDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.JobPostingDetailDTO;
-import rs.ac.uns.ftn.informatika.jpa.Repository.ApplicationRepository;
 import rs.ac.uns.ftn.informatika.jpa.Repository.JobPostingRepository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,11 +12,11 @@ import java.util.List;
 @Service
 public class JobPostingPublicService {
     private final JobPostingRepository repo;
-    private final ApplicationRepository appRepo;
+    private final ApplicationService applicationService;
 
-    public JobPostingPublicService(JobPostingRepository repo,ApplicationRepository appRepo) {
+    public JobPostingPublicService(JobPostingRepository repo, ApplicationService applicationService) {
         this.repo = repo;
-        this.appRepo = appRepo;
+        this.applicationService = applicationService;
     }
 
     @Transactional(readOnly = true)
@@ -42,7 +41,7 @@ public class JobPostingPublicService {
 
         boolean applied = false;
         if (candidateIdOrNull != null) {
-            applied = appRepo.existsByJobPosting_IdAndCandidate_Id(postingId, candidateIdOrNull);
+            applied = applicationService.hasApplied(postingId, candidateIdOrNull);
         }
 
         var r = p.getRequestion();

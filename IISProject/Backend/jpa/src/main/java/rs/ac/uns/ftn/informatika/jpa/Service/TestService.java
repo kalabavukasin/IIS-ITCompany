@@ -111,6 +111,21 @@ public class TestService {
                 .map(this::mapToDto);
     }
 
+    @Transactional
+    public void verifyTestWithScore(Long applicationId, BigDecimal testScore) {
+        TestInvite test = testInviteRepository.findTopByApplicationId(applicationId)
+                .orElseThrow(() -> new IllegalArgumentException("Test not found for application"));
+
+        test.setStatus(TestInviteStatus.VERIFIED);
+        TestResult testResult = new TestResult();
+        testResult.setTestInvite(test);
+        testResult.setScore(testScore);
+        testResult.setPassed(true);
+
+        testInviteRepository.save(test);
+        testResultRepository.save(testResult);
+    }
+
     private TestDetailsDTO mapToDto(TestInvite inv) {
 
         var resultOpt = testResultRepository.findByTestInviteId(inv.getId());

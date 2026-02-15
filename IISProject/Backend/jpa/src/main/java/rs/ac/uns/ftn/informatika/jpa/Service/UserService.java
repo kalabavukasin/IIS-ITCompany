@@ -1,6 +1,5 @@
 package rs.ac.uns.ftn.informatika.jpa.Service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,7 +28,6 @@ public class UserService {
     private final EmailService emailService;
     private final CandidateProfileRepository candidateProfileRepository;
 
-    @Autowired
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        EmailService emailService,
@@ -119,5 +117,13 @@ public class UserService {
                 .stream()
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("No active hiring manager found"));
+    }
+
+    public CandidateProfile getCandidateProfileReference(Long candidateId) {
+        return candidateProfileRepository.getReferenceById(candidateId);
+    }
+
+    public Optional<CandidateProfile> getCandidateProfileById(Long candidateId) {
+        return candidateProfileRepository.findById(candidateId);
     }
 }

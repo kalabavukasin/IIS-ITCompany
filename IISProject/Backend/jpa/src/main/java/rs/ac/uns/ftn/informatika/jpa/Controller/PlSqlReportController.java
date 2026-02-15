@@ -16,12 +16,13 @@ import java.util.Map;
 @RequestMapping("/api/plsql-reports")
 public class PlSqlReportController {
 
-    @Autowired
-    private PlSqlReportService plSqlReportService;
+    private final PlSqlReportService plSqlReportService;
 
-    /**
-     * Generiše kompleksan PL/SQL izveštaj
-     */
+    public PlSqlReportController(PlSqlReportService plSqlReportService) {
+        this.plSqlReportService = plSqlReportService;
+    }
+
+    // Generise kompleksan PL/SQL izvestaj
     @GetMapping("/comprehensive")
     public ResponseEntity<?> generateComprehensiveReport(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -37,9 +38,9 @@ public class PlSqlReportController {
         }
     }
 
-    /**
-     * Izračunava osnovne metrike zapošljavanja
-     */
+
+    // Izracunava osnovne metrike zaposljavanja
+
     @GetMapping("/metrics")
     public ResponseEntity<Map<String, Object>> getRecruitmentMetrics(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -54,9 +55,9 @@ public class PlSqlReportController {
         }
     }
 
-    /**
-     * Testira performanse indeksa
-     */
+
+    // Testira performanse indeksa
+
     @GetMapping("/performance-test")
     public ResponseEntity<PerformanceTestResult> testIndexPerformance() {
         try {
@@ -67,9 +68,9 @@ public class PlSqlReportController {
         }
     }
 
-    /**
-     * Kreira test podatke za demonstraciju
-     */
+
+    // Kreira test podatke za demonstraciju
+
     @PostMapping("/create-test-data")
     public ResponseEntity<String> createTestData() {
         try {
@@ -80,9 +81,9 @@ public class PlSqlReportController {
         }
     }
 
-    /**
-     * Postavlja trenutnog korisnika za audit log
-     */
+
+    // Postavlja trenutnog korisnika za audit log
+
     @PostMapping("/set-current-user/{userId}")
     public ResponseEntity<String> setCurrentUser(@PathVariable Long userId) {
         try {
@@ -93,9 +94,8 @@ public class PlSqlReportController {
         }
     }
 
-    /**
-     * Generiše izveštaj za trenutni mesec
-     */
+    // Generise izvestaj za trenutni mesec
+
     @GetMapping("/current-month")
     public ResponseEntity<List<ReportSection>> getCurrentMonthReport() {
         try {
@@ -109,12 +109,8 @@ public class PlSqlReportController {
         }
     }
 
-    /**
-     * Generiše izveštaj za poslednjih 30 dana
-     */
-    /**
-     * Test endpoint za proveru PL/SQL komponenti
-     */
+    // Generise izvestaj za poslednjih 30 dana
+    // Test endpoint za proveru PL/SQL komponenti
     @GetMapping("/test-plsql")
     public ResponseEntity<?> testPlSqlComponents() {
         try {

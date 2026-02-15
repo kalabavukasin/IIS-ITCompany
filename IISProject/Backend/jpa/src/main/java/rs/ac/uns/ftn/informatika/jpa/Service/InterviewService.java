@@ -3,17 +3,15 @@ package rs.ac.uns.ftn.informatika.jpa.Service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rs.ac.uns.ftn.informatika.jpa.Dto.InterviewDetailsDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.InterviewScheduleDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.InterviewToShowDTO;
-import rs.ac.uns.ftn.informatika.jpa.Dto.TestDetailsDTO;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.InterviewParticipantRole;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.InterviewStatus;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.InterviewType;
-import rs.ac.uns.ftn.informatika.jpa.Enumerations.TestInviteStatus;
 import rs.ac.uns.ftn.informatika.jpa.Model.*;
-import rs.ac.uns.ftn.informatika.jpa.Repository.*;
+import rs.ac.uns.ftn.informatika.jpa.Repository.InterviewRepository;
+import rs.ac.uns.ftn.informatika.jpa.Repository.InterviewParticipantRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,23 +22,19 @@ public class InterviewService {
     private final InterviewRepository interviewRepository;
     private final InterviewParticipantRepository participantRepository;
     private final ApplicationService applicationService;
-    private final UserRepository userRepository;
-    private final TestInviteRepository testRepository;
-    private final TestResultRepository testResultRepository;
+    private final UserService userService;
+    private final TestService testService;
 
     public InterviewService(InterviewRepository interviewRepository,
                             InterviewParticipantRepository participantRepository,
                             ApplicationService applicationService,
-                            ApplicationRepository applicationRepository,
-                            UserRepository userRepository,
-                            TestInviteRepository testRepository,
-                            TestResultRepository testResultRepository) {
+                            UserService userService,
+                            TestService testService) {
         this.interviewRepository = interviewRepository;
         this.participantRepository = participantRepository;
         this.applicationService = applicationService;
-        this.userRepository = userRepository;
-        this.testRepository = testRepository;
-        this.testResultRepository = testResultRepository;
+        this.userService = userService;
+        this.testService = testService;
     }
     @Transactional
     public Interview scheduleInterview(InterviewScheduleDTO dto, Long triggeredByUserId) {
@@ -50,15 +44,7 @@ public class InterviewService {
 
         //If we have a test score (coming from Test phase), update the test
         if (dto.testScore != null) {
-            TestInvite test = testRepository.findTopByApplicationId(dto.applicationId)
-                    .orElseThrow(() -> new IllegalArgumentException("Test not found for application"));
-            test.setStatus(TestInviteStatus.VERIFIED);
-            TestResult testResult = new TestResult();
-            testResult.setTestInvite(test);
-            testResult.setScore(dto.testScore);
-            testResult.setPassed(true);
-            testRepository.save(test);
-            testResultRepository.save(testResult);
+            testService.verifyTestWithScore(dto.applicationId, dto.testScore);
         }
 
         //Interview initialization
@@ -83,7 +69,7 @@ public class InterviewService {
 
         // adding the interviewer
         if (dto.interviewerId != null) {
-            User interviewer = userRepository.findById(dto.interviewerId)
+            User interviewer = userService.getUserById(dto.interviewerId)
                     .orElseThrow(() -> new IllegalArgumentException("Interviewer not found"));
 
             InterviewParticipant interviewerParticipant = new InterviewParticipant();
@@ -96,7 +82,7 @@ public class InterviewService {
         //adding observers
         if (dto.observerIds != null && !dto.observerIds.isEmpty()) {
             for (Long observerId : dto.observerIds) {
-                User observer = userRepository.findById(observerId)
+                User observer = userService.getUserById(observerId)
                         .orElseThrow(() -> new IllegalArgumentException("Observer not found: " + observerId));
 
                 InterviewParticipant observerParticipant = new InterviewParticipant();

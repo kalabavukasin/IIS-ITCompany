@@ -1,6 +1,5 @@
 package rs.ac.uns.ftn.informatika.jpa.Service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -9,7 +8,6 @@ import org.springframework.stereotype.Service;
 public class EmailService {
     private final JavaMailSender mailSender;
 
-    @Autowired
     public EmailService(JavaMailSender mailsender) {
         this.mailSender = mailsender;
     }

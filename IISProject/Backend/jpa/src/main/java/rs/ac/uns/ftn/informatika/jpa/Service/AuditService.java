@@ -11,16 +11,14 @@ public class AuditService {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    /**
-     * Postavlja trenutnog korisnika za audit log triggere
-     */
+    // Postavlja trenutnog korisnika za audit log triggere
     @Transactional
     public void setCurrentUserForAudit(Long userId) {
         if (userId != null) {
             try {
                 jdbcTemplate.queryForObject("SELECT set_current_user_id(?)", Long.class, userId);
             } catch (Exception e) {
-                // Ignoriši greške ako PL/SQL ne radi
+                // Ignorisi greške ako PL/SQL ne radi
             }
         }
     }

@@ -21,11 +21,13 @@ public class ReportController {
 
     private static final Logger logger = Logger.getLogger(ReportController.class.getName());
 
-    @Autowired
-    private ReportService reportService;
-    
-    @Autowired
-    private PdfReportService pdfReportService;
+    private final ReportService reportService;
+    private final PdfReportService pdfReportService;
+
+    public ReportController(ReportService reportService, PdfReportService pdfReportService) {
+        this.reportService = reportService;
+        this.pdfReportService = pdfReportService;
+    }
 
     @GetMapping(value = "/pdf", produces = "application/pdf")
     public ResponseEntity<byte[]> generatePdfReport(
@@ -140,9 +142,8 @@ public class ReportController {
 
     // ===== PL/SQL INTEGRATED ENDPOINTS =====
     
-    /**
-     * Generiše izveštaj koristeći PL/SQL funkcije
-     */
+
+    // Generise izvestaj koristeći PL/SQL funkcije
     @GetMapping(value = "/plsql", produces = "application/json")
     public ResponseEntity<ReportDTO> generatePlSqlReport(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -163,9 +164,8 @@ public class ReportController {
         }
     }
     
-    /**
-     * Generiše kompleksan PL/SQL izveštaj
-     */
+    //Generise kompleksan PL/SQL izvestaj
+
     @GetMapping(value = "/plsql/comprehensive", produces = "application/json")
     public ResponseEntity<List<Map<String, Object>>> generateComprehensivePlSqlReport(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -186,9 +186,7 @@ public class ReportController {
         }
     }
     
-    /**
-     * Testira performanse indeksa
-     */
+    // Testira performanse indeksa
     @GetMapping(value = "/plsql/performance-test", produces = "application/json")
     public ResponseEntity<Map<String, Object>> testIndexPerformance() {
         try {
@@ -202,9 +200,7 @@ public class ReportController {
         }
     }
     
-    /**
-     * Postavlja trenutnog korisnika za audit log
-     */
+    // Postavlja trenutnog korisnika za audit log
     @PostMapping(value = "/plsql/set-current-user/{userId}")
     public ResponseEntity<String> setCurrentUserForAudit(@PathVariable Long userId) {
         try {
