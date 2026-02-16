@@ -1,6 +1,5 @@
 package rs.ac.uns.ftn.informatika.jpa.Service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,7 +8,6 @@ import rs.ac.uns.ftn.informatika.jpa.Enumerations.ApplicationStatus;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.OfferStatus;
 import rs.ac.uns.ftn.informatika.jpa.Model.Application;
 import rs.ac.uns.ftn.informatika.jpa.Model.ApplicationStatusHistory;
-import rs.ac.uns.ftn.informatika.jpa.Repository.*;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -20,17 +18,17 @@ import java.util.stream.Collectors;
 @Service
 public class ReportService {
 
-    @Autowired
-    private ApplicationRepository applicationRepository;
-    
-    @Autowired
-    private ApplicationStatusHistoryRepository applicationStatusHistoryRepository;
-    
-    @Autowired
-    private OfferRepository offerRepository;
-    
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private final ApplicationService applicationService;
+    private final OfferService offerService;
+    private final JdbcTemplate jdbcTemplate;
+
+    public ReportService(ApplicationService applicationService,
+                         OfferService offerService,
+                         JdbcTemplate jdbcTemplate) {
+        this.applicationService = applicationService;
+        this.offerService = offerService;
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     @Transactional(readOnly = true)
     public ReportDTO generateReport(LocalDate startDate, LocalDate endDate) {
@@ -48,10 +46,10 @@ public class ReportService {
         // 2. Konverzije po fazama procesa
         report.setStageConversions(getStageConversions(startDateTime, endDateTime));
         
-        // 3. Prosečno vreme do zaposlenja
+        // 3. Prosecno vreme do zaposlenja
         report.setAverageTimeToHire(getAverageTimeToHire(startDateTime, endDateTime));
         
-        // 4. Prosečno vreme po fazi
+        // 4. Prosecno vreme po fazi
         report.setAverageTimePerStage(getAverageTimePerStage(startDateTime, endDateTime));
         
         
@@ -70,7 +68,7 @@ public class ReportService {
 
 
     private List<JobPostingApplicationCountDTO> getApplicationsPerJobPosting(OffsetDateTime startDate, OffsetDateTime endDate) {
-        return applicationRepository.findApplicationsByDateRange(startDate, endDate).stream()
+        return applicationService.findApplicationsByDateRange(startDate, endDate).stream()
                 .collect(Collectors.groupingBy(Application::getJobPosting))
                 .entrySet().stream()
                 .map(entry -> new JobPostingApplicationCountDTO(
@@ -83,7 +81,7 @@ public class ReportService {
     }
 
     private List<StageConversionDTO> getStageConversions(OffsetDateTime startDate, OffsetDateTime endDate) {
-        List<ApplicationStatusHistory> histories = applicationStatusHistoryRepository.findHistoriesByDateRange(startDate, endDate);
+        List<ApplicationStatusHistory> histories = applicationService.findHistoriesByDateRange(startDate, endDate);
         
         Map<String, List<ApplicationStatusHistory>> byStage = histories.stream()
                 .collect(Collectors.groupingBy(h -> h.getStage().getName()));
@@ -105,7 +103,7 @@ public class ReportService {
     }
 
     private Double getAverageTimeToHire(OffsetDateTime startDate, OffsetDateTime endDate) {
-        List<Application> hiredApplications = applicationRepository.findApplicationsByStatusAndDateRange(ApplicationStatus.HIRED, startDate, endDate);
+        List<Application> hiredApplications = applicationService.findApplicationsByStatusAndDateRange(ApplicationStatus.HIRED, startDate, endDate);
         
         if (hiredApplications.isEmpty()) {
             return 0.0;
@@ -113,9 +111,9 @@ public class ReportService {
         
         double totalDays = hiredApplications.stream()
                 .mapToDouble(app -> {
-                    // Pronađi poslednji status history za ovu aplikaciju
-                    List<ApplicationStatusHistory> histories = applicationStatusHistoryRepository
-                            .findByApplication_IdOrderByEnteredAtAsc(app.getId());
+                    // Pronadji poslednji status history za ovu aplikaciju
+                    List<ApplicationStatusHistory> histories = applicationService
+                            .findHistoriesByApplicationIdOrderByEnteredAtAsc(app.getId());
                     
                     if (histories.isEmpty()) {
                         return 0.0;
@@ -133,7 +131,7 @@ public class ReportService {
     }
 
     private List<StageAverageTimeDTO> getAverageTimePerStage(OffsetDateTime startDate, OffsetDateTime endDate) {
-        List<ApplicationStatusHistory> histories = applicationStatusHistoryRepository.findCompletedHistoriesByDateRange(startDate, endDate);
+        List<ApplicationStatusHistory> histories = applicationService.findCompletedHistoriesByDateRange(startDate, endDate);
         
         Map<String, List<ApplicationStatusHistory>> byStage = histories.stream()
                 .collect(Collectors.groupingBy(h -> h.getStage().getName()));
@@ -156,7 +154,7 @@ public class ReportService {
 
 
     private InvitationRejectionRatioDTO getInvitationRejectionRatio(OffsetDateTime startDate, OffsetDateTime endDate) {
-        List<Application> applications = applicationRepository.findApplicationsByDateRange(startDate, endDate);
+        List<Application> applications = applicationService.findApplicationsByDateRange(startDate, endDate);
         
         long totalInvited = applications.size();
         long totalRejected = applications.stream()
@@ -169,7 +167,7 @@ public class ReportService {
     }
 
     private Double getOfferRejectionPercentage(OffsetDateTime startDate, OffsetDateTime endDate) {
-        List<rs.ac.uns.ftn.informatika.jpa.Model.Offer> offers = offerRepository.findOffersByDateRange(startDate, endDate);
+        List<rs.ac.uns.ftn.informatika.jpa.Model.Offer> offers = offerService.findOffersByDateRange(startDate, endDate);
         
         if (offers.isEmpty()) {
             return 0.0;
@@ -183,18 +181,17 @@ public class ReportService {
     }
 
     private Long getTotalApplications(OffsetDateTime startDate, OffsetDateTime endDate) {
-        return (long) applicationRepository.findApplicationsByDateRange(startDate, endDate).size();
+        return (long) applicationService.findApplicationsByDateRange(startDate, endDate).size();
     }
 
     private Long getTotalHired(OffsetDateTime startDate, OffsetDateTime endDate) {
-        return (long) applicationRepository.findApplicationsByStatusAndDateRange(ApplicationStatus.HIRED, startDate, endDate).size();
+        return (long) applicationService.findApplicationsByStatusAndDateRange(ApplicationStatus.HIRED, startDate, endDate).size();
     }
 
     // ===== PL/SQL INTEGRATED METHODS =====
-    
-    /**
-     * Generiše izveštaj koristeći PL/SQL funkcije umesto JPA upita
-     */
+
+     // Generise izvestaj koristeći PL/SQL funkcije umesto JPA upita
+
     @Transactional(readOnly = true)
     public ReportDTO generateReportWithPlSql(LocalDate startDate, LocalDate endDate) {
         ReportDTO report = new ReportDTO();
@@ -213,7 +210,7 @@ public class ReportService {
             report.setAverageTimeToHire(((Number) metrics.get("average_time_to_hire")).doubleValue());
             report.setOfferRejectionPercentage(((Number) metrics.get("offer_rejection_percentage")).doubleValue());
             
-            // Ostale metrike računamo koristeći JPA (fallback pristup)
+            // Ostale metrike racunamo koristeći JPA (fallback pristup)
             OffsetDateTime startDateTime = startDate.atStartOfDay().atOffset(OffsetDateTime.now().getOffset());
             OffsetDateTime endDateTime = endDate.atTime(23, 59, 59).atOffset(OffsetDateTime.now().getOffset());
             
@@ -221,7 +218,7 @@ public class ReportService {
             report.setApplicationsPerJobPosting(getApplicationsPerJobPosting(startDateTime, endDateTime));
             report.setAverageTimePerStage(getAverageTimePerStage(startDateTime, endDateTime));
             
-            // Izračunaj odnos pozivani/odbijeni
+            // Izracunaj odnos pozivani/odbijeni
             long totalInvited = report.getTotalApplications();
             long totalRejected = totalInvited - report.getTotalHired();
             double rejectionRate = totalInvited > 0 ? (double) totalRejected / totalInvited * 100 : 0.0;
@@ -235,9 +232,9 @@ public class ReportService {
         return report;
     }
     
-    /**
-     * Generiše kompleksan PL/SQL izveštaj
-     */
+
+    // Generise kompleksan PL/SQL izvestaj
+
     @Transactional(readOnly = true)
     public List<Map<String, Object>> generateComprehensivePlSqlReport(LocalDate startDate, LocalDate endDate) {
         return jdbcTemplate.queryForList(
@@ -246,17 +243,17 @@ public class ReportService {
         );
     }
     
-    /**
-     * Postavlja trenutnog korisnika za audit log
-     */
+
+     // Postavlja trenutnog korisnika za audit log
+
     @Transactional
     public void setCurrentUserForAudit(Long userId) {
         jdbcTemplate.queryForObject("SELECT set_current_user_id(?)", Long.class, userId);
     }
     
-    /**
-     * Testira performanse indeksa
-     */
+
+    // Testira performanse indeksa
+
     @Transactional(readOnly = true)
     public Map<String, Object> testIndexPerformance() {
         Map<String, Object> result = new HashMap<>();

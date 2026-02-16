@@ -1,7 +1,6 @@
 package rs.ac.uns.ftn.informatika.jpa.Controller;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,7 +29,6 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final CvStorageService cvStorageService;
 
-    @Autowired
     public AuthController(UserService userService, AuthenticationManager authenticationManager, JwtUtil jwtUtil,
                           CvStorageService cvStorageService) {
         this.userService = userService;

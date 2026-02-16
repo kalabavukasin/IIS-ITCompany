@@ -39,4 +39,8 @@ public class JobPostingService {
                     return jobPostingRepo.save(p);
                 });
     }
+
+    public java.util.Optional<JobPosting> findByIdWithRequestion(Long postingId) {
+        return jobPostingRepo.findByIdWithRequestion(postingId);
+    }
 }

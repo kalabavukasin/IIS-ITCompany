@@ -15,7 +15,7 @@ import java.util.Date;
 public class JwtUtil {
 
     private final String SECRET_KEY = "my_secret_key";  // Use a strong secret key in production
-    private final long EXPIRATION_TIME = 86400000;  // Token expiration time (24 hours)
+    private final long EXPIRATION_TIME = 604800000;  // Token expiration time (7 days)
 
     public String generateToken(Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();

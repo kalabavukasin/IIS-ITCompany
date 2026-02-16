@@ -7,29 +7,29 @@ import rs.ac.uns.ftn.informatika.jpa.Dto.EvaluationResponseDTO;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.InterviewStatus;
 import rs.ac.uns.ftn.informatika.jpa.Model.Evaluation;
 import rs.ac.uns.ftn.informatika.jpa.Model.Interview;
+import rs.ac.uns.ftn.informatika.jpa.Model.User;
 import rs.ac.uns.ftn.informatika.jpa.Repository.EvaluationRepository;
 import rs.ac.uns.ftn.informatika.jpa.Repository.InterviewRepository;
 import org.springframework.transaction.annotation.Transactional;
-import rs.ac.uns.ftn.informatika.jpa.Repository.UserRepository;
 
 @Service
 public class EvaluationService {
     private final EvaluationRepository evalRepo;
     private final InterviewRepository interviewRepo;
-    private final UserRepository userRepo;
+    private final UserService userService;
 
     public EvaluationService(EvaluationRepository evalRepo, InterviewRepository interviewRepo,
-                             UserRepository userRepo) {
+                             UserService userService) {
         this.evalRepo = evalRepo;
         this.interviewRepo = interviewRepo;
-        this.userRepo = userRepo;
+        this.userService = userService;
     }
 
     @Transactional
     public EvaluationResponseDTO create(CreateEvaluationRequestDTO req) {
         Interview interview = interviewRepo.findById(req.interviewId())
                 .orElseThrow(() -> new IllegalArgumentException("Interview not found: " + req.interviewId()));
-        var interviewer = userRepo.findById(req.interviewerId())
+        User interviewer = userService.getUserById(req.interviewerId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + req.interviewerId()));
 
 

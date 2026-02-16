@@ -1,16 +1,17 @@
 package rs.ac.uns.ftn.informatika.jpa.Service;
 
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rs.ac.uns.ftn.informatika.jpa.Dto.*;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.ApplicationStatus;
-import rs.ac.uns.ftn.informatika.jpa.Enumerations.OfferStatus;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.Role;
 import rs.ac.uns.ftn.informatika.jpa.Mapper.ApplicationMapper;
 import rs.ac.uns.ftn.informatika.jpa.Model.*;
-import rs.ac.uns.ftn.informatika.jpa.Repository.*;
+import rs.ac.uns.ftn.informatika.jpa.Repository.ApplicationRepository;
+import rs.ac.uns.ftn.informatika.jpa.Repository.ApplicationStatusHistoryRepository;
+import rs.ac.uns.ftn.informatika.jpa.Repository.WorkflowStageRepository;
+import rs.ac.uns.ftn.informatika.jpa.Repository.WorkflowTransitionRepository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -19,39 +20,36 @@ import java.util.Optional;
 @Service
 public class ApplicationService {
     private final ApplicationRepository appRepo;
-    private final JobPostingRepository postingRepo;
+    private final JobPostingService jobPostingService;
     private final WorkflowStageRepository stageRepo;
-    private final CandidateProfileRepository candidateRepo;
     private final WorkflowService workflowService;
-    private final ApplicationRepository applicationRepository;
     private final WorkflowTransitionRepository transitionRepo;
     private final ApplicationStatusHistoryRepository historyRepo;
     private final UserService userService;
-    private final OfferRepository offerRepo;
     private final AuditService auditService;
 
-    public ApplicationService(ApplicationRepository appRepo, JobPostingRepository postingRepo,
-                              WorkflowStageRepository stageRepo, CandidateProfileRepository candidateRepo,
-                              WorkflowService workflowService, ApplicationRepository applicationRepository,
+    public ApplicationService(ApplicationRepository appRepo, JobPostingService jobPostingService,
+                              WorkflowStageRepository stageRepo,
+                              WorkflowService workflowService,
                               WorkflowTransitionRepository transitionRepo,
                               ApplicationStatusHistoryRepository historyRepo,
                               UserService userService,
-                              OfferRepository offerRepo,
                               AuditService auditService) {
         this.appRepo = appRepo;
-        this.postingRepo = postingRepo;
+        this.jobPostingService = jobPostingService;
         this.stageRepo = stageRepo;
-        this.candidateRepo = candidateRepo;
         this.workflowService = workflowService;
-        this.applicationRepository = applicationRepository;
         this.transitionRepo = transitionRepo;
         this.historyRepo = historyRepo;
         this.userService = userService;
-        this.offerRepo = offerRepo;
         this.auditService = auditService;
     }
     public Optional<Application> getApplicationById(Long id) {
-        return applicationRepository.findById(id);
+        return appRepo.findById(id);
+    }
+
+    public boolean hasApplied(Long postingId, Long candidateId) {
+        return appRepo.existsByJobPosting_IdAndCandidate_Id(postingId, candidateId);
     }
 
     @Transactional
@@ -63,7 +61,7 @@ public class ApplicationService {
             throw new IllegalStateException("Already applied");
         }
 
-        var posting = postingRepo.findByIdWithRequestion(postingId)
+        var posting = jobPostingService.findByIdWithRequestion(postingId)
                 .orElseThrow(() -> new RuntimeException("Posting not found " + postingId));
 
         var initial = stageRepo.findFirstByWorkflow_IdOrderBySortOrderAsc(
@@ -73,7 +71,7 @@ public class ApplicationService {
 
         var a = new Application();
         a.setJobPosting(posting);
-        a.setCandidate(candidateRepo.getReferenceById(candidateId));
+        a.setCandidate(userService.getCandidateProfileReference(candidateId));
         a.setWorkflow(workflow);
         a.setCurrentStage(initial);
         a.setStatus(ApplicationStatus.ACTIVE);
@@ -106,7 +104,7 @@ public class ApplicationService {
 
         // 1) CV download URL
         String cvUrl = null;
-        var prof = candidateRepo.findById(raw.candidateId());
+        var prof = userService.getCandidateProfileById(raw.candidateId());
         if (prof.isPresent() && prof.get().getCvPath() != null) {
             cvUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
                     .path("/api/cv/")
@@ -153,6 +151,15 @@ public class ApplicationService {
         return ApplicationMapper.toDto(appRepo.save(application));
 
     }
+
+    @Transactional
+    public void updateApplicationStatus(Long applicationId, ApplicationStatus newStatus) {
+        Application application = appRepo.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found: " + applicationId));
+        application.setStatus(newStatus);
+        appRepo.save(application);
+    }
+
     @Transactional
     public boolean advanceWorkflow(Long applicationId, String comment, Long triggeredByUserId, Role userRole) {
         // Postavi user_id za audit log
@@ -264,21 +271,25 @@ public class ApplicationService {
             historyRepo.save(history);
         }
     }
-    @Transactional
-    public void createOffer(OfferCreateDTO dto, Long triggeredById) {
-        // Postavi user_id za audit log
-        //auditService.setCurrentUserForAudit(triggeredById);
-        
-        Application app = appRepo.findById(dto.applicationId)
-                .orElseThrow(() -> new EntityNotFoundException("Application not found"));
 
-        Offer offer = new Offer();
-        offer.setApplication(app);
-        offer.setStartDate(dto.startDate);
-        offer.setCreatedAt(OffsetDateTime.now());
-        offer.setStatus(OfferStatus.SENT);
-        offerRepo.save(offer);
+    // Reporting methods
+    public List<Application> findApplicationsByDateRange(OffsetDateTime startDate, OffsetDateTime endDate) {
+        return appRepo.findApplicationsByDateRange(startDate, endDate);
+    }
 
-        advanceWorkflowOnOfferMade(dto.applicationId, triggeredById);
+    public List<Application> findApplicationsByStatusAndDateRange(ApplicationStatus status, OffsetDateTime startDate, OffsetDateTime endDate) {
+        return appRepo.findApplicationsByStatusAndDateRange(status, startDate, endDate);
+    }
+
+    public List<ApplicationStatusHistory> findHistoriesByDateRange(OffsetDateTime startDate, OffsetDateTime endDate) {
+        return historyRepo.findHistoriesByDateRange(startDate, endDate);
+    }
+
+    public List<ApplicationStatusHistory> findCompletedHistoriesByDateRange(OffsetDateTime startDate, OffsetDateTime endDate) {
+        return historyRepo.findCompletedHistoriesByDateRange(startDate, endDate);
+    }
+
+    public List<ApplicationStatusHistory> findHistoriesByApplicationIdOrderByEnteredAtAsc(Long applicationId) {
+        return historyRepo.findByApplication_IdOrderByEnteredAtAsc(applicationId);
     }
 }

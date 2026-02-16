@@ -13,11 +13,9 @@ import java.util.List;
 @RequestMapping("/api/applications")
 public class ApplicationController {
     private final ApplicationService service;
-    private final ApplicationService applicationService;
 
-    public ApplicationController(ApplicationService service, ApplicationService applicationService) {
+    public ApplicationController(ApplicationService service) {
         this.service = service;
-        this.applicationService = applicationService;
     }
 
     @PostMapping("/apply")
@@ -66,13 +64,5 @@ public class ApplicationController {
     @PostMapping("/{id}/refuse")
     public ResponseEntity<ApplicationDTO> refuse(@PathVariable Long id, @RequestBody RefuseRequestDTO body) {
         return ResponseEntity.ok(service.refuse(id, body.getReason()));
-    }
-
-    @PostMapping("/offer")
-    @PreAuthorize("hasAnyAuthority('HR_MANAGER','HIRING_MANAGER')")
-    public ResponseEntity<Void> makeOffer(@RequestBody OfferCreateDTO dto) {
-        Long triggeredById = SecurityUtils.getCurrentUserId();
-        applicationService.createOffer(dto, triggeredById);
-        return ResponseEntity.noContent().build();
     }
 }

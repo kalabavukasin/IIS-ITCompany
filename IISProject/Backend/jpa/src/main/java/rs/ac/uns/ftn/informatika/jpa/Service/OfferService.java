@@ -1,29 +1,30 @@
 package rs.ac.uns.ftn.informatika.jpa.Service;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import rs.ac.uns.ftn.informatika.jpa.Dto.OfferCardDTO;
+import rs.ac.uns.ftn.informatika.jpa.Dto.OfferCreateDTO;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.ApplicationStatus;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.OfferStatus;
 import rs.ac.uns.ftn.informatika.jpa.Model.Application;
-import rs.ac.uns.ftn.informatika.jpa.Repository.ApplicationRepository;
+import rs.ac.uns.ftn.informatika.jpa.Model.Offer;
 import rs.ac.uns.ftn.informatika.jpa.Repository.OfferRepository;
 
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 
 @Service
 public class OfferService {
     private final OfferRepository offerRepo;
-    private final ApplicationRepository applicationRepo;
+    private final ApplicationService applicationService;
     private final AuditService auditService;
 
-    public OfferService (OfferRepository offerRepo, ApplicationRepository applicationRepo, AuditService auditService) {
+    public OfferService (OfferRepository offerRepo, ApplicationService applicationService, AuditService auditService) {
         this.offerRepo = offerRepo;
-        this.applicationRepo = applicationRepo;
+        this.applicationService = applicationService;
         this.auditService = auditService;
     }
 
@@ -49,11 +50,8 @@ public class OfferService {
         if (o.getStatus() != OfferStatus.SENT) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only SENT offers can be accepted");
         }
-        Application application = applicationRepo.findById(o.getApplication().getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
 
-        application.setStatus(ApplicationStatus.HIRED);
-        applicationRepo.save(application);
+        applicationService.updateApplicationStatus(o.getApplication().getId(), ApplicationStatus.HIRED);
         o.setStatus(OfferStatus.ACCEPTED);
         offerRepo.save(o);
 
@@ -85,11 +83,7 @@ public class OfferService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only SENT offers can be declined");
         }
 
-        Application application = applicationRepo.findById(o.getApplication().getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
-
-        application.setStatus(ApplicationStatus.REFUSED_OFFER);
-        applicationRepo.save(application);
+        applicationService.updateApplicationStatus(o.getApplication().getId(), ApplicationStatus.REFUSED_OFFER);
         o.setStatus(OfferStatus.DECLINED);
         offerRepo.save(o);
 
@@ -102,5 +96,26 @@ public class OfferService {
                 r.getName(),
                 r.getDescription()
         );
+    }
+
+    // Reporting method
+    @Transactional(readOnly = true)
+    public List<Offer> findOffersByDateRange(OffsetDateTime startDate, OffsetDateTime endDate) {
+        return offerRepo.findOffersByDateRange(startDate, endDate);
+    }
+
+    @Transactional
+    public void createOffer(OfferCreateDTO dto, Long triggeredById) {
+        Application app = applicationService.getApplicationById(dto.applicationId)
+                .orElseThrow(() -> new EntityNotFoundException("Application not found"));
+
+        Offer offer = new Offer();
+        offer.setApplication(app);
+        offer.setStartDate(dto.startDate);
+        offer.setCreatedAt(OffsetDateTime.now());
+        offer.setStatus(OfferStatus.SENT);
+        offerRepo.save(offer);
+
+        applicationService.advanceWorkflowOnOfferMade(dto.applicationId, triggeredById);
     }
 }
