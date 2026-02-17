@@ -32,4 +32,11 @@ public interface InterviewRepository extends JpaRepository<Interview, Long> {
             "ORDER BY i.scheduledAt ASC")
     List<Interview> findUpcomingInterviews(@Param("now") OffsetDateTime now);
     Optional<Interview> findByApplicationId(Long applicationId);
+
+    @Query("""
+        SELECT i FROM Interview i
+        WHERE i.status = rs.ac.uns.ftn.informatika.jpa.Enumerations.InterviewStatus.SCHEDULED
+        AND i.scheduledAt < :threshold
+    """)
+    List<Interview> findOverdueScheduledInterviews(@Param("threshold") OffsetDateTime threshold);
 }

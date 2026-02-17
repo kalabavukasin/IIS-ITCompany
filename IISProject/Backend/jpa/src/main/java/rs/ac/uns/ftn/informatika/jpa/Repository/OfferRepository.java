@@ -32,9 +32,16 @@ public interface OfferRepository extends JpaRepository<Offer, Long> {
                                                     @Param("cutoff") OffsetDateTime cutoff);
 
     @Query("""
-        SELECT o FROM Offer o 
+        SELECT o FROM Offer o
         WHERE o.createdAt >= :startDate AND o.createdAt <= :endDate
     """)
-    List<rs.ac.uns.ftn.informatika.jpa.Model.Offer> findOffersByDateRange(@Param("startDate") OffsetDateTime startDate, 
+    List<rs.ac.uns.ftn.informatika.jpa.Model.Offer> findOffersByDateRange(@Param("startDate") OffsetDateTime startDate,
                                                                          @Param("endDate") OffsetDateTime endDate);
+
+    @Query("""
+        SELECT o FROM Offer o
+        WHERE o.status = rs.ac.uns.ftn.informatika.jpa.Enumerations.OfferStatus.SENT
+        AND o.createdAt < :expirationThreshold
+    """)
+    List<Offer> findExpiredOffers(@Param("expirationThreshold") OffsetDateTime expirationThreshold);
 }

@@ -160,6 +160,16 @@ public class ApplicationService {
         appRepo.save(application);
     }
 
+    // Similar like refuse method, but much mor flexible.
+    @Transactional
+    public void updateApplicationStatusWithNote(Long applicationId, ApplicationStatus newStatus, String note) {
+        Application application = appRepo.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found: " + applicationId));
+        application.setStatus(newStatus);
+        application.setNote(note);
+        appRepo.save(application);
+    }
+
     @Transactional
     public boolean advanceWorkflow(Long applicationId, String comment, Long triggeredByUserId, Role userRole) {
         // Postavi user_id za audit log
