@@ -30,4 +30,11 @@ public interface JobPostingRepository extends JpaRepository<JobPosting, Long> {
       where p.id = :id
     """)
     Optional<JobPosting> findByIdWithRequestion(@Param("id") Long id);
+
+    @Query("""
+        SELECT jp FROM JobPosting jp
+        WHERE jp.status = rs.ac.uns.ftn.informatika.jpa.Enumerations.JobPostingStatus.PUBLISHED
+        AND jp.validTo < :today
+    """)
+    List<JobPosting> findExpiredJobPostings(@Param("today") LocalDate today);
 }
