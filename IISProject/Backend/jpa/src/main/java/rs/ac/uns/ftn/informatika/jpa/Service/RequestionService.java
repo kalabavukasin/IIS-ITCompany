@@ -98,7 +98,7 @@ public class RequestionService {
     public RequestionResponseDTO reject(Long id, Long hiringManagerId, String comment) {
         Requestion r = repo.findById(id).orElseThrow(() -> new RuntimeException("Request not found: " + id));
 
-        // Dont allow rejection if DRAFT or CLOSED
+        // Do not allow rejection if DRAFT or CLOSED
         if (r.getStatus() == RequestionStatus.DRAFT || r.getStatus() == RequestionStatus.CLOSED) {
             throw new IllegalStateException("Cannot reject requestion in " + r.getStatus() + " status");
         }

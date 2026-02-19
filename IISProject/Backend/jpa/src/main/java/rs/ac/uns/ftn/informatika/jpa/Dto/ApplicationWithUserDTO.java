@@ -12,10 +12,13 @@ public class ApplicationWithUserDTO {
     public String requestName;
     public String requestDescription;
     public String requestLocation;
+    public String seniority;
 
     public Long candidateId;
     public String candidateName;
     public LocalDate openUntil;
+
+    public String cvDownloadUrl; // populated only for by-posting endpoint
 
     public ApplicationWithUserDTO(
             Long applicationId,
@@ -25,6 +28,7 @@ public class ApplicationWithUserDTO {
             String requestName,
             String requestDescription,
             String requestLocation,
+            String seniority,
             Long candidateId,
             String candidateName,
             LocalDate openUntil) {
@@ -35,6 +39,7 @@ public class ApplicationWithUserDTO {
         this.requestName = requestName;
         this.requestDescription = requestDescription;
         this.requestLocation = requestLocation;
+        this.seniority = seniority;
         this.candidateId = candidateId;
         this.candidateName = candidateName;
         this.openUntil = openUntil;

@@ -56,6 +56,12 @@ public class ApplicationController {
         return service.getCardsByHiringManager(hmId);
     }
 
+    @GetMapping("/cards/by-posting/{postingId}")
+    @PreAuthorize("hasAnyAuthority('HR_MANAGER','HIRING_MANAGER')")
+    public List<ApplicationWithUserDTO> getCardsByPosting(@PathVariable Long postingId) {
+        return service.getCardsByPosting(postingId);
+    }
+
     @GetMapping("/{id}/details")
     public ResponseEntity<ApplicationDetailsDTO> details(@PathVariable Long id) {
         return ResponseEntity.ok(service.getDetails(id));

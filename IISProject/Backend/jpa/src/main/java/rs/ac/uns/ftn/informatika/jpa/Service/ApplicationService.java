@@ -97,6 +97,23 @@ public class ApplicationService {
     public List<ApplicationWithUserDTO> getCardsByHiringManager(Long hmId) {
         return appRepo.findCardsByHiringManager(hmId);
     }
+
+    @Transactional
+    public List<ApplicationWithUserDTO> getCardsByPosting(Long postingId) {
+        List<ApplicationWithUserDTO> list = appRepo.findCardsByPostingId(postingId);
+        for (ApplicationWithUserDTO dto : list) {
+            var prof = userService.getCandidateProfileById(dto.candidateId);
+            if (prof.isPresent() && prof.get().getCvPath() != null) {
+                dto.cvDownloadUrl = org.springframework.web.servlet.support.ServletUriComponentsBuilder
+                        .fromCurrentContextPath()
+                        .path("/api/cv/")
+                        .path(prof.get().getCvPath())
+                        .toUriString();
+            }
+        }
+        return list;
+    }
+
     @Transactional
     public ApplicationDetailsDTO getDetails(Long appId) {
         var raw = appRepo.findRawDetails(appId)
