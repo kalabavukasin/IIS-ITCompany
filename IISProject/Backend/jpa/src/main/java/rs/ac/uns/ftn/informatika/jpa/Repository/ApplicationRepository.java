@@ -12,6 +12,7 @@ import java.util.Optional;
 
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
     boolean existsByJobPosting_IdAndCandidate_Id(Long postingId, Long candidateId);
+    boolean existsByJobPosting_Id(Long jobPostingId);
     List<Application> findByCandidate_IdOrderByAppliedAtDesc(Long candidateId);
 
     @Query("""

@@ -30,7 +30,8 @@ public class JobPostingPublicService {
                         p.getRequestion().getLocation(),
                         p.getRequestion().getBudget(),
                         p.getValidTo(),
-                        p.getCreatedAt()
+                        p.getCreatedAt(),
+                        p.getRequestion().getSeniority() != null ? p.getRequestion().getSeniority().name() : null
                 ))
                 .toList();
     }
