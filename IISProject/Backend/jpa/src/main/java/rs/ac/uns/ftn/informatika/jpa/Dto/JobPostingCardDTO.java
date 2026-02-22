@@ -13,13 +13,14 @@ public class JobPostingCardDTO {
     public LocalDate expires;    // JobPosting.validTo
     public OffsetDateTime createdAt;
     public String seniority;     // from Requestion.seniority
+    public String status;        // JobPosting.status
 
     public JobPostingCardDTO(Long id, String name, String description, String location,
                              BigDecimal salary, LocalDate expires, OffsetDateTime createdAt,
-                             String seniority) {
+                             String seniority, String status) {
         this.id = id; this.name = name; this.description = description;
         this.location = location; this.salary = salary;
         this.expires = expires; this.createdAt = createdAt;
-        this.seniority = seniority;
+        this.seniority = seniority; this.status = status;
     }
 }

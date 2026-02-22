@@ -31,7 +31,8 @@ public class JobPostingPublicService {
                         p.getRequestion().getBudget(),
                         p.getValidTo(),
                         p.getCreatedAt(),
-                        p.getRequestion().getSeniority() != null ? p.getRequestion().getSeniority().name() : null
+                        p.getRequestion().getSeniority() != null ? p.getRequestion().getSeniority().name() : null,
+                        p.getStatus().name()
                 ))
                 .toList();
     }

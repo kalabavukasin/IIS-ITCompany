@@ -84,4 +84,57 @@ public class JobPostingService {
     public java.util.Optional<JobPosting> findByIdWithRequestion(Long postingId) {
         return jobPostingRepo.findByIdWithRequestion(postingId);
     }
+
+    @Transactional
+    public JobPosting archiveManually(Long postingId) {
+        JobPosting p = jobPostingRepo.findByIdWithRequestion(postingId)
+                .orElseThrow(() -> new IllegalArgumentException("Posting not found: " + postingId));
+        if (p.getStatus() != JobPostingStatus.PUBLISHED) {
+            throw new IllegalStateException("Only PUBLISHED postings can be archived");
+        }
+        p.setStatus(JobPostingStatus.ARCHIVED);
+        return jobPostingRepo.save(p);
+    }
+
+    @Transactional
+    public JobPosting extendValidTo(Long postingId, LocalDate newValidTo) {
+        JobPosting p = jobPostingRepo.findByIdWithRequestion(postingId)
+                .orElseThrow(() -> new IllegalArgumentException("Posting not found: " + postingId));
+        if (p.getStatus() != JobPostingStatus.PUBLISHED) {
+            throw new IllegalStateException("Only PUBLISHED postings can be extended");
+        }
+        if (!newValidTo.isAfter(p.getValidTo())) {
+            throw new IllegalArgumentException(
+                    "New expiry date must be after the current expiry date (" + p.getValidTo() + ")");
+        }
+        p.setValidTo(newValidTo);
+        return jobPostingRepo.save(p);
+    }
+
+    @Transactional
+    public JobPosting republish(Long postingId, LocalDate newValidTo) {
+        JobPosting p = jobPostingRepo.findByIdWithRequestion(postingId)
+                .orElseThrow(() -> new IllegalArgumentException("Posting not found: " + postingId));
+        if (p.getStatus() != JobPostingStatus.ARCHIVED) {
+            throw new IllegalStateException("Only ARCHIVED postings can be republished");
+        }
+        LocalDate today = LocalDate.now();
+        if (p.getValidTo().isBefore(today)) {
+            if (newValidTo == null) {
+                throw new IllegalArgumentException(
+                        "New expiry date is required — the current expiry date is in the past");
+            }
+            if (!newValidTo.isAfter(today)) {
+                throw new IllegalArgumentException("New expiry date must be in the future");
+            }
+            p.setValidTo(newValidTo);
+        } else if (newValidTo != null) {
+            if (!newValidTo.isAfter(today)) {
+                throw new IllegalArgumentException("New expiry date must be in the future");
+            }
+            p.setValidTo(newValidTo);
+        }
+        p.setStatus(JobPostingStatus.PUBLISHED);
+        return jobPostingRepo.save(p);
+    }
 }
