@@ -65,33 +65,64 @@ public class RequestionService {
     }
 
     @Transactional
-    public RequestionResponseDTO approve(Long id, Long hiringManagerId,String comment) {
+    public RequestionResponseDTO approve(Long id, Long hiringManagerId, String comment) {
         Requestion r = repo.findById(id).orElseThrow(() -> new RuntimeException("Request not found: " + id));
-        if (r.getStatus() == RequestionStatus.APPROVED || r.getStatus() == RequestionStatus.REJECTED || r.getStatus() == RequestionStatus.CLOSED) {
-            return RequestionMapper.toDto(r); // vec finalizovan — nista
+
+        // Don't allow approval if DRAFT or CLOSED
+        if (r.getStatus() == RequestionStatus.DRAFT || r.getStatus() == RequestionStatus.CLOSED) {
+            throw new IllegalStateException("Cannot approve requestion in " + r.getStatus() + " status");
         }
+
+        // Allow toggle from REJECTED to APPROVED, and normal PENDING_APPROVAL to APPROVED
+        RequestionStatus previousStatus = r.getStatus();
+
         User hm = userService.getUserById(hiringManagerId)
                 .orElseThrow(() -> new RuntimeException("User not found with id " + hiringManagerId));
-        r.setHiringManager(hm);                     // ako vec nije setovano
+        r.setHiringManager(hm);
         r.setStatus(RequestionStatus.APPROVED);
         r.setHiringComment(comment);
 
-        jobPostingService.createForApprovedRequestion(r);
+        // Create or reactivate JobPosting (handles both new approval and re-approval)
+        jobPostingService.createOrReactivateForApprovedRequestion(r);
 
-        return RequestionMapper.toDto(repo.save(r));
+        Requestion saved = repo.save(r);
+
+        if (previousStatus == RequestionStatus.REJECTED) {
+            System.out.println("Requestion " + id + " re-approved (was REJECTED)");
+        }
+
+        return RequestionMapper.toDto(saved);
     }
 
     @Transactional
-    public RequestionResponseDTO reject(Long id, Long hiringManagerId,String comment) {
-        var r = repo.findById(id).orElseThrow(() -> new RuntimeException("Request not found: " + id));
-        if (r.getStatus() == RequestionStatus.APPROVED || r.getStatus() == RequestionStatus.REJECTED || r.getStatus() == RequestionStatus.CLOSED) {
-            return RequestionMapper.toDto(r);
+    public RequestionResponseDTO reject(Long id, Long hiringManagerId, String comment) {
+        Requestion r = repo.findById(id).orElseThrow(() -> new RuntimeException("Request not found: " + id));
+
+        // Do not allow rejection if DRAFT or CLOSED
+        if (r.getStatus() == RequestionStatus.DRAFT || r.getStatus() == RequestionStatus.CLOSED) {
+            throw new IllegalStateException("Cannot reject requestion in " + r.getStatus() + " status");
         }
-        var hm = userService.getUserById(hiringManagerId)
+
+        RequestionStatus previousStatus = r.getStatus();
+
+        // If previously APPROVED, we need to archive the JobPosting (if no applications)
+        if (previousStatus == RequestionStatus.APPROVED) {
+            // This will throw exception if applications exist
+            jobPostingService.archiveJobPostingForRequestion(r.getId());
+        }
+
+        User hm = userService.getUserById(hiringManagerId)
                 .orElseThrow(() -> new RuntimeException("User not found with id " + hiringManagerId));
         r.setHiringManager(hm);
         r.setStatus(RequestionStatus.REJECTED);
         r.setHiringComment(comment);
-        return RequestionMapper.toDto(repo.save(r));
+
+        Requestion saved = repo.save(r);
+
+        if (previousStatus == RequestionStatus.APPROVED) {
+            System.out.println("Requestion " + id + " rejected (was APPROVED, JobPosting archived)");
+        }
+
+        return RequestionMapper.toDto(saved);
     }
 }

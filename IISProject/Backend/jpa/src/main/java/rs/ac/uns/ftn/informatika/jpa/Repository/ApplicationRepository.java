@@ -12,6 +12,7 @@ import java.util.Optional;
 
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
     boolean existsByJobPosting_IdAndCandidate_Id(Long postingId, Long candidateId);
+    boolean existsByJobPosting_Id(Long jobPostingId);
     List<Application> findByCandidate_IdOrderByAppliedAtDesc(Long candidateId);
 
     @Query("""
@@ -39,6 +40,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
             r.name,
             r.description,
             r.location,
+            cast(r.seniority as string),
             u.id,
             concat(u.firstName, ' ', u.lastName),
             jp.validTo
@@ -61,6 +63,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
             r.name,
             r.description,
             r.location,
+            cast(r.seniority as string),
             u.id,
             concat(u.firstName, ' ', u.lastName),
             jp.validTo
@@ -84,6 +87,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
             r.name,
             r.description,
             r.location,
+            cast(r.seniority as string),
             u.id,
             concat(u.firstName, ' ', u.lastName),
             jp.validTo
@@ -97,6 +101,30 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
         order by a.id desc
     """)
     List<rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationWithUserDTO> findCardsByHiringManager(@Param("hmId") Long hmId);
+
+    @Query("""
+        select new rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationWithUserDTO(
+            a.id,
+            cast(a.status as string),
+            cs.name,
+            jp.id,
+            r.name,
+            r.description,
+            r.location,
+            cast(r.seniority as string),
+            u.id,
+            concat(u.firstName, ' ', u.lastName),
+            jp.validTo
+        )
+        from Application a
+        join a.candidate u
+        join a.jobPosting jp
+        join jp.requestion r
+        left join a.currentStage cs
+        where jp.id = :postingId
+        order by a.id desc
+    """)
+    List<rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationWithUserDTO> findCardsByPostingId(@Param("postingId") Long postingId);
 
     @Query("""
         select new rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationDetailsDTO(

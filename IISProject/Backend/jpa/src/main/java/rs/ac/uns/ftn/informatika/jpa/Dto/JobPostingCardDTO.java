@@ -6,17 +6,21 @@ import java.time.OffsetDateTime;
 
 public class JobPostingCardDTO {
     public Long id;
-    public String name;          // iz Requestion.name
-    public String description;   // iz Requestion.description (kratko)
-    public String location;      // iz Requestion.location
-    public BigDecimal salary;        // iz Requestion.budget
+    public String name;          // from Requestion.name
+    public String description;   // from Requestion.description
+    public String location;      // from Requestion.location
+    public BigDecimal salary;        // from Requestion.budget
     public LocalDate expires;    // JobPosting.validTo
     public OffsetDateTime createdAt;
+    public String seniority;     // from Requestion.seniority
+    public String status;        // JobPosting.status
 
     public JobPostingCardDTO(Long id, String name, String description, String location,
-                             BigDecimal salary, LocalDate expires, OffsetDateTime createdAt) {
+                             BigDecimal salary, LocalDate expires, OffsetDateTime createdAt,
+                             String seniority, String status) {
         this.id = id; this.name = name; this.description = description;
         this.location = location; this.salary = salary;
         this.expires = expires; this.createdAt = createdAt;
+        this.seniority = seniority; this.status = status;
     }
 }
