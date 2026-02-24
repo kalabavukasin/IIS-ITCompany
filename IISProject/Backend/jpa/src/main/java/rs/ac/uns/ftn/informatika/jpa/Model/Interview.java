@@ -30,6 +30,9 @@ public class Interview {
     @Column(name = "interview_status")
     private InterviewStatus status;
 
+    @Column(name = "batch_id", length = 36)
+    private String batchId;
+
     public Interview() {}
 
     public Long getId() { return id; }
@@ -53,4 +56,6 @@ public class Interview {
     public InterviewStatus getStatus() { return status; }
     public void setStatus(InterviewStatus status) { this.status = status; }
 
+    public String getBatchId() { return batchId; }
+    public void setBatchId(String batchId) { this.batchId = batchId; }
 }

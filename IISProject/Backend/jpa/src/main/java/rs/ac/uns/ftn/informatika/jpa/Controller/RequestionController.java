@@ -49,7 +49,7 @@ public class RequestionController {
     public RequestionResponseDTO approve(@PathVariable Long id,
                                          @RequestBody @Valid DecisionDTO body) {
         Long userId = SecurityUtils.getCurrentUserId();
-        return service.approve(id, userId, body.comment);
+        return service.approve(id, userId, body.comment, body.durationDays);
     }
 
     @PostMapping("/{id}/reject")

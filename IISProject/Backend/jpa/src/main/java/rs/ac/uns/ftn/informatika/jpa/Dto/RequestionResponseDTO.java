@@ -4,6 +4,7 @@ import rs.ac.uns.ftn.informatika.jpa.Enumerations.RequestionStatus;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.Seniority;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 public class RequestionResponseDTO {
@@ -21,4 +22,9 @@ public class RequestionResponseDTO {
     public Long createdById;
     public String createdByFullName;
     public Long pipelineWorkflowId;
+
+    public Integer durationDays;
+    public LocalDate reviewDeadline;
+    public Integer minExperienceYears;
+    public String niceToHaveSkills;
 }

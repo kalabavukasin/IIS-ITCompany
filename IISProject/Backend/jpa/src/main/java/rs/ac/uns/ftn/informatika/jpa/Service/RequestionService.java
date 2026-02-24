@@ -65,7 +65,7 @@ public class RequestionService {
     }
 
     @Transactional
-    public RequestionResponseDTO approve(Long id, Long hiringManagerId, String comment) {
+    public RequestionResponseDTO approve(Long id, Long hiringManagerId, String comment, Integer overrideDurationDays) {
         Requestion r = repo.findById(id).orElseThrow(() -> new RuntimeException("Request not found: " + id));
 
         // Don't allow approval if DRAFT or CLOSED
@@ -82,8 +82,12 @@ public class RequestionService {
         r.setStatus(RequestionStatus.APPROVED);
         r.setHiringComment(comment);
 
+        // Resolve duration: HM override > HR preference > default 30 days
+        int durationDays = overrideDurationDays != null ? overrideDurationDays
+                : (r.getDurationDays() != null ? r.getDurationDays() : 30);
+
         // Create or reactivate JobPosting (handles both new approval and re-approval)
-        jobPostingService.createOrReactivateForApprovedRequestion(r);
+        jobPostingService.createOrReactivateForApprovedRequestion(r, durationDays);
 
         Requestion saved = repo.save(r);
 

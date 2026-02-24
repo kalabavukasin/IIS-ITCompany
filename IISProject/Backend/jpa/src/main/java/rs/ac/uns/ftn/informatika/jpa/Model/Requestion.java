@@ -6,6 +6,7 @@ import rs.ac.uns.ftn.informatika.jpa.Enumerations.RequestionStatus;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.Seniority;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -57,6 +58,18 @@ public class Requestion {
     @JoinColumn(name = "pipeline_workflow_id")
     private WorkflowDef pipelineWorkflow;
 
+    @Column(name = "duration_days")
+    private Integer durationDays;
+
+    @Column(name = "review_deadline")
+    private LocalDate reviewDeadline;
+
+    @Column(name = "min_experience_years")
+    private Integer minExperienceYears;
+
+    @Column(name = "nice_to_have_skills", columnDefinition = "TEXT")
+    private String niceToHaveSkills;
+
     public Requestion() {}
 
     public Long getId() { return id; }
@@ -100,4 +113,16 @@ public class Requestion {
 
     public WorkflowDef getPipelineWorkflow() { return pipelineWorkflow; }
     public void setPipelineWorkflow(WorkflowDef pipelineWorkflow) { this.pipelineWorkflow = pipelineWorkflow; }
+
+    public Integer getDurationDays() { return durationDays; }
+    public void setDurationDays(Integer durationDays) { this.durationDays = durationDays; }
+
+    public LocalDate getReviewDeadline() { return reviewDeadline; }
+    public void setReviewDeadline(LocalDate reviewDeadline) { this.reviewDeadline = reviewDeadline; }
+
+    public Integer getMinExperienceYears() { return minExperienceYears; }
+    public void setMinExperienceYears(Integer minExperienceYears) { this.minExperienceYears = minExperienceYears; }
+
+    public String getNiceToHaveSkills() { return niceToHaveSkills; }
+    public void setNiceToHaveSkills(String niceToHaveSkills) { this.niceToHaveSkills = niceToHaveSkills; }
 }

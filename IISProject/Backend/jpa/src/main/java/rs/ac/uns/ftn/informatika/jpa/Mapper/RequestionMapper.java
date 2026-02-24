@@ -14,6 +14,10 @@ public class RequestionMapper {
         r.setLocation(dto.location);
         r.setBudget(dto.budget);
         r.setName(dto.name);
+        r.setDurationDays(dto.durationDays);
+        r.setReviewDeadline(dto.reviewDeadline);
+        r.setMinExperienceYears(dto.minExperienceYears);
+        r.setNiceToHaveSkills(dto.niceToHaveSkills);
         return r;
     }
     public static RequestionResponseDTO toDto(Requestion r) {
@@ -34,6 +38,10 @@ public class RequestionMapper {
                 : null;*/
         d.createdById = (r.getCreatedBy() != null) ? r.getCreatedBy().getId() : null;
         d.pipelineWorkflowId = r.getPipelineWorkflow().getId();
+        d.durationDays = r.getDurationDays();
+        d.reviewDeadline = r.getReviewDeadline();
+        d.minExperienceYears = r.getMinExperienceYears();
+        d.niceToHaveSkills = r.getNiceToHaveSkills();
         return d;
     }
 }

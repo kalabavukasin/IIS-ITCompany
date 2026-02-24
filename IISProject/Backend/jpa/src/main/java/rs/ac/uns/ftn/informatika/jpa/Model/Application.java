@@ -40,6 +40,24 @@ public class Application {
 
     private String note;
 
+    @Column(name = "auto_ai_score")
+    private Integer autoAiScore;
+
+    @Column(name = "auto_ai_score_note", columnDefinition = "TEXT")
+    private String autoAiScoreNote;
+
+    @Column(name = "auto_ai_scored_at")
+    private OffsetDateTime autoAiScoredAt;
+
+    @Column(name = "bulk_ai_score")
+    private Integer bulkAiScore;
+
+    @Column(name = "bulk_ai_score_note", columnDefinition = "TEXT")
+    private String bulkAiScoreNote;
+
+    @Column(name = "bulk_ai_scored_at")
+    private OffsetDateTime bulkAiScoredAt;
+
     public Application() {}
 
     public Long getId() { return id; }
@@ -65,4 +83,22 @@ public class Application {
 
     public String getNote() { return note; }
     public void setNote(String note) { this.note = note; }
+
+    public Integer getAutoAiScore() { return autoAiScore; }
+    public void setAutoAiScore(Integer autoAiScore) { this.autoAiScore = autoAiScore; }
+
+    public String getAutoAiScoreNote() { return autoAiScoreNote; }
+    public void setAutoAiScoreNote(String autoAiScoreNote) { this.autoAiScoreNote = autoAiScoreNote; }
+
+    public OffsetDateTime getAutoAiScoredAt() { return autoAiScoredAt; }
+    public void setAutoAiScoredAt(OffsetDateTime autoAiScoredAt) { this.autoAiScoredAt = autoAiScoredAt; }
+
+    public Integer getBulkAiScore() { return bulkAiScore; }
+    public void setBulkAiScore(Integer bulkAiScore) { this.bulkAiScore = bulkAiScore; }
+
+    public String getBulkAiScoreNote() { return bulkAiScoreNote; }
+    public void setBulkAiScoreNote(String bulkAiScoreNote) { this.bulkAiScoreNote = bulkAiScoreNote; }
+
+    public OffsetDateTime getBulkAiScoredAt() { return bulkAiScoredAt; }
+    public void setBulkAiScoredAt(OffsetDateTime bulkAiScoredAt) { this.bulkAiScoredAt = bulkAiScoredAt; }
 }

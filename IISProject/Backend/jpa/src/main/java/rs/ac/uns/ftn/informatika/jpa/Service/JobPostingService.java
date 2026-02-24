@@ -29,7 +29,7 @@ public class JobPostingService {
     }
 
     @Transactional
-    public JobPosting createOrReactivateForApprovedRequestion(Requestion r) {
+    public JobPosting createOrReactivateForApprovedRequestion(Requestion r, int durationDays) {
         Optional<JobPosting> existing = jobPostingRepo.findByRequestion_Id(r.getId());
 
         if (existing.isPresent()) {
@@ -37,7 +37,7 @@ public class JobPostingService {
             JobPosting p = existing.get();
             p.setStatus(JobPostingStatus.PUBLISHED);
             p.setValidFrom(LocalDate.now());
-            p.setValidTo(LocalDate.now().plusDays(30)); // Fresh 30 days
+            p.setValidTo(LocalDate.now().plusDays(durationDays));
             return jobPostingRepo.save(p);
         } else {
             // Create new JobPosting
@@ -48,7 +48,7 @@ public class JobPostingService {
             JobPosting p = new JobPosting();
             p.setRequestion(r);
             p.setValidFrom(LocalDate.now());
-            p.setValidTo(LocalDate.now().plusDays(30));
+            p.setValidTo(LocalDate.now().plusDays(durationDays));
             p.setCreatedAt(OffsetDateTime.now());
             p.setStatus(JobPostingStatus.PUBLISHED);
             p.setPipelineWorkflow(wf);
@@ -58,7 +58,7 @@ public class JobPostingService {
 
     @Transactional
     public JobPosting createForApprovedRequestion(Requestion r) {
-        return createOrReactivateForApprovedRequestion(r);
+        return createOrReactivateForApprovedRequestion(r, 30);
     }
 
     @Transactional

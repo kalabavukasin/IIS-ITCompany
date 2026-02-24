@@ -36,6 +36,9 @@ public class CandidateProfile {
     @Column(name = "cv_size_bytes")
     private Long cvSizeBytes;
 
+    @Column(name = "cv_text_content", columnDefinition = "TEXT")
+    private String cvTextContent;
+
     @Column(nullable = false)
     private OffsetDateTime createdAt;
 
@@ -74,4 +77,6 @@ public class CandidateProfile {
     public Long getCvSizeBytes() { return cvSizeBytes; }
     public void setCvSizeBytes(Long cvSizeBytes) { this.cvSizeBytes = cvSizeBytes; }
 
+    public String getCvTextContent() { return cvTextContent; }
+    public void setCvTextContent(String cvTextContent) { this.cvTextContent = cvTextContent; }
 }
