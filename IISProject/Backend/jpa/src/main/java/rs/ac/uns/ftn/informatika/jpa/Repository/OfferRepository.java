@@ -10,12 +10,14 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+
 public interface OfferRepository extends JpaRepository<Offer, Long> {
     @Query("""
         select new rs.ac.uns.ftn.informatika.jpa.Dto.OfferCardDTO(
             o.id,
             cast(o.status as string),
             o.startDate,
+            o.validUntil,
             a.id,
             r.name,
             r.description
@@ -41,7 +43,7 @@ public interface OfferRepository extends JpaRepository<Offer, Long> {
     @Query("""
         SELECT o FROM Offer o
         WHERE o.status = rs.ac.uns.ftn.informatika.jpa.Enumerations.OfferStatus.SENT
-        AND o.createdAt < :expirationThreshold
+        AND o.validUntil < :today
     """)
-    List<Offer> findExpiredOffers(@Param("expirationThreshold") OffsetDateTime expirationThreshold);
+    List<Offer> findExpiredOffers(@Param("today") LocalDate today);
 }

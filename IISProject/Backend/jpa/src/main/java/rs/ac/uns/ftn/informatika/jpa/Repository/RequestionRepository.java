@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.RequestionStatus;
 import rs.ac.uns.ftn.informatika.jpa.Model.Requestion;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +19,13 @@ public interface RequestionRepository extends JpaRepository<Requestion, Long> {
     @Query("""
         SELECT r FROM Requestion r
         WHERE r.status = rs.ac.uns.ftn.informatika.jpa.Enumerations.RequestionStatus.PENDING_APPROVAL
-        AND r.createdAt < :thresholdDate
+        AND (
+            (r.reviewDeadline IS NOT NULL AND r.reviewDeadline < :today)
+            OR
+            (r.reviewDeadline IS NULL AND r.createdAt < :fallbackThreshold)
+        )
     """)
-    List<Requestion> findPendingRequestionsPastThreshold(@Param("thresholdDate") OffsetDateTime thresholdDate);
+    List<Requestion> findPendingRequestionsPastThreshold(
+            @Param("today") LocalDate today,
+            @Param("fallbackThreshold") OffsetDateTime fallbackThreshold);
 }

@@ -6,6 +6,7 @@ public record OfferCardDTO(
         Long offerId,
         String status,
         LocalDate startDate,
+        LocalDate validUntil,
         Long applicationId,
         String requestName,
         String requestDescription

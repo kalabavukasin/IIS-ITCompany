@@ -9,6 +9,7 @@ import rs.ac.uns.ftn.informatika.jpa.Enumerations.RequestionStatus;
 import rs.ac.uns.ftn.informatika.jpa.Model.Requestion;
 import rs.ac.uns.ftn.informatika.jpa.Repository.RequestionRepository;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -16,7 +17,8 @@ import java.util.List;
 public class RequestionApprovalTimeoutScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(RequestionApprovalTimeoutScheduler.class);
-    private static final int APPROVAL_TIMEOUT_DAYS = 30;
+    // Fallback: used only when a requestion has no reviewDeadline set
+    private static final int FALLBACK_TIMEOUT_DAYS = 30;
 
     private final RequestionRepository requestionRepository;
 
@@ -24,35 +26,34 @@ public class RequestionApprovalTimeoutScheduler {
         this.requestionRepository = requestionRepository;
     }
 
-    // Requestions in PENDING_APPROVAL status for more than 30 days are moved back to DRAFT
-    // this gives hiring managers a chance to review and resubmit
+    // Requestions in PENDING_APPROVAL status are moved back to DRAFT when:
+    //   - reviewDeadline is set and has passed, OR
+    //   - reviewDeadline is not set and they have been pending for more than FALLBACK_TIMEOUT_DAYS days
 
     @Scheduled(cron = "0 0 2 * * *") // Every day at 2:00 AM
     @Transactional
     public void timeoutPendingRequestions() {
-        OffsetDateTime threshold = OffsetDateTime.now().minusDays(APPROVAL_TIMEOUT_DAYS);
+        LocalDate today = LocalDate.now();
+        OffsetDateTime fallbackThreshold = OffsetDateTime.now().minusDays(FALLBACK_TIMEOUT_DAYS);
 
-        // Find all PENDING_APPROVAL requestions older than 30 days
-        List<Requestion> timedOutRequestions = requestionRepository.findPendingRequestionsPastThreshold(threshold);
+        List<Requestion> timedOutRequestions = requestionRepository
+                .findPendingRequestionsPastThreshold(today, fallbackThreshold);
 
         if (timedOutRequestions.isEmpty()) {
             log.debug("No timed-out requestions found");
             return;
         }
 
-        log.info("Found {} requestion(s) pending approval for more than {} days",
-            timedOutRequestions.size(), APPROVAL_TIMEOUT_DAYS);
+        log.info("Found {} requestion(s) pending approval past their deadline", timedOutRequestions.size());
 
         for (Requestion requestion : timedOutRequestions) {
             try {
-                // Move back to DRAFT status
                 requestion.setStatus(RequestionStatus.DRAFT);
 
-                // Add comment explaining why it was moved back to draft
-                String timeoutComment = "Moved back to DRAFT after " + APPROVAL_TIMEOUT_DAYS +
-                    " days without approval. Please review and resubmit.";
+                String timeoutComment = requestion.getReviewDeadline() != null
+                        ? "Moved back to DRAFT: review deadline " + requestion.getReviewDeadline() + " passed without approval."
+                        : "Moved back to DRAFT after " + FALLBACK_TIMEOUT_DAYS + " days without approval. Please review and resubmit.";
 
-                // Append to existing comment if any
                 if (requestion.getHiringComment() != null && !requestion.getHiringComment().isEmpty()) {
                     requestion.setHiringComment(requestion.getHiringComment() + " | " + timeoutComment);
                 } else {
@@ -61,12 +62,12 @@ public class RequestionApprovalTimeoutScheduler {
 
                 requestionRepository.save(requestion);
 
-                log.info("Requestion ID {} moved back to DRAFT after {} days pending approval",
-                    requestion.getId(), APPROVAL_TIMEOUT_DAYS);
+                log.info("Requestion ID {} moved back to DRAFT (reviewDeadline={})",
+                        requestion.getId(), requestion.getReviewDeadline());
 
             } catch (Exception e) {
                 log.error("Error processing timed-out requestion ID {}: {}",
-                    requestion.getId(), e.getMessage(), e);
+                        requestion.getId(), e.getMessage(), e);
             }
         }
 

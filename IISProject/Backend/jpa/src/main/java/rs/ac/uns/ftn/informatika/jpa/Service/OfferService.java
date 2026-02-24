@@ -13,6 +13,7 @@ import rs.ac.uns.ftn.informatika.jpa.Model.Application;
 import rs.ac.uns.ftn.informatika.jpa.Model.Offer;
 import rs.ac.uns.ftn.informatika.jpa.Repository.OfferRepository;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -60,6 +61,7 @@ public class OfferService {
                 o.getId(),
                 o.getStatus().name(),
                 o.getStartDate(),
+                o.getValidUntil(),
                 app.getId(),
                 r.getName(),
                 r.getDescription()
@@ -91,7 +93,8 @@ public class OfferService {
         return new OfferCardDTO(
                 o.getId(),
                 o.getStatus().name(),
-                o.getStartDate(),    // LocalDate
+                o.getStartDate(),
+                o.getValidUntil(),
                 app.getId(),
                 r.getName(),
                 r.getDescription()
@@ -112,6 +115,7 @@ public class OfferService {
         Offer offer = new Offer();
         offer.setApplication(app);
         offer.setStartDate(dto.startDate);
+        offer.setValidUntil(dto.validUntil != null ? dto.validUntil : LocalDate.now().plusDays(14));
         offer.setCreatedAt(OffsetDateTime.now());
         offer.setStatus(OfferStatus.SENT);
         offerRepo.save(offer);

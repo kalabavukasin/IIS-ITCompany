@@ -57,6 +57,7 @@ public class AuthController {
         user.setPhone(dto.phone());
 
         CvStorageService.SavedCv saved = cvStorageService.save(cv);
+        String cvText = cvStorageService.extractText(saved.path, saved.originalName);
 
         CandidateProfile profile = new CandidateProfile();
         profile.setUser(user);
@@ -71,6 +72,7 @@ public class AuthController {
             profile.setCvOriginalName(saved.originalName);
             profile.setCvMime(saved.mime);
             profile.setCvSizeBytes(saved.sizeBytes);
+            profile.setCvTextContent(cvText);
         }
         userService.registerUser(user,profile);
         response.put("message", "User registered successfully. Please check your email for activation link.");

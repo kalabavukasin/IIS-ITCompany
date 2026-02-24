@@ -1,5 +1,10 @@
 package rs.ac.uns.ftn.informatika.jpa.Service;
 
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.sax.BodyContentHandler;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -8,6 +13,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 
+import java.io.InputStream;
 import java.util.Locale;
 
 import java.io.IOException;
@@ -75,6 +81,26 @@ public class CvStorageService {
         Path root = Paths.get(uploadDir).toAbsolutePath().normalize();
         return root.resolve(Paths.get(relativePath).getFileName().toString());
     }
+    public String extractText(String relativePath, String originalName) {
+        try {
+            Path filePath = resolveAbsolute(relativePath);
+            AutoDetectParser parser = new AutoDetectParser();
+            BodyContentHandler handler = new BodyContentHandler(-1); // -1 = bez limita karaktera
+            Metadata metadata = new Metadata();
+            if (originalName != null) {
+                metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, originalName);
+            }
+            try (InputStream is = Files.newInputStream(filePath)) {
+                parser.parse(is, handler, metadata, new ParseContext());
+            }
+            String text = handler.toString().trim();
+            return text.isEmpty() ? null : text;
+        } catch (Exception e) {
+            // Ne blokiramo registraciju
+            return null;
+        }
+    }
+
     public MediaType detectMediaType(String relativePath, String fallbackMime) throws IOException {
         Path p = resolveAbsolute(relativePath);
         String probed = Files.probeContentType(p);

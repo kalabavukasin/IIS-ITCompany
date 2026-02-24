@@ -11,14 +11,13 @@ import rs.ac.uns.ftn.informatika.jpa.Model.Offer;
 import rs.ac.uns.ftn.informatika.jpa.Repository.OfferRepository;
 import rs.ac.uns.ftn.informatika.jpa.Service.ApplicationService;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Component
 public class OfferExpirationScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(OfferExpirationScheduler.class);
-    private static final int OFFER_EXPIRATION_DAYS = 14;
 
     private final OfferRepository offerRepository;
     private final ApplicationService applicationService;
@@ -29,16 +28,14 @@ public class OfferExpirationScheduler {
         this.applicationService = applicationService;
     }
 
-    // Offers with status SENT created more than 14 days ago are marked as EXPIRED
+    // Offers with status SENT whose validUntil date has passed are marked as EXPIRED
     // their applications are automatically marked as REFUSED_OFFER
 
     @Scheduled(cron = "0 0 4 * * *") // Every day at 4:00 AM
     @Transactional
     public void expireOffers() {
-        OffsetDateTime expirationThreshold = OffsetDateTime.now().minusDays(OFFER_EXPIRATION_DAYS);
-
-        // Find all SENT offers created more than 14 days ago
-        List<Offer> expiredOffers = offerRepository.findExpiredOffers(expirationThreshold);
+        // Find all SENT offers whose validUntil date is in the past
+        List<Offer> expiredOffers = offerRepository.findExpiredOffers(LocalDate.now());
 
         if (expiredOffers.isEmpty()) {
             log.debug("No expired offers found");
@@ -58,7 +55,7 @@ public class OfferExpirationScheduler {
                 applicationService.updateApplicationStatusWithNote(
                     applicationId,
                     ApplicationStatus.REFUSED_OFFER,
-                    "Offer expired after " + OFFER_EXPIRATION_DAYS + " days"
+                    "Offer expired (valid until " + offer.getValidUntil() + ")"
                 );
 
                 log.info("Offer ID {} expired and application ID {} marked as REFUSED_OFFER",

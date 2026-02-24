@@ -28,10 +28,10 @@ public class Requestion {
     @Column(nullable = false)
     private String positionTitle;
 
-    @NotBlank @Column(nullable = false)
+    @NotBlank @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
-    @NotBlank
+    @NotBlank @Column(columnDefinition = "TEXT")
     private String skills;
 
     @Enumerated(EnumType.STRING)

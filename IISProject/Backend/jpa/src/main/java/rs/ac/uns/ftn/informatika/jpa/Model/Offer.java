@@ -22,6 +22,9 @@ public class Offer {
 
     private LocalDate startDate;
 
+    @Column(name = "valid_until")
+    private LocalDate validUntil;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "offer_status")
     private OfferStatus status;
@@ -38,6 +41,9 @@ public class Offer {
 
     public LocalDate getStartDate() { return startDate; }
     public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
+
+    public LocalDate getValidUntil() { return validUntil; }
+    public void setValidUntil(LocalDate validUntil) { this.validUntil = validUntil; }
 
     public OfferStatus getStatus() { return status; }
     public void setStatus(OfferStatus status) { this.status = status; }
