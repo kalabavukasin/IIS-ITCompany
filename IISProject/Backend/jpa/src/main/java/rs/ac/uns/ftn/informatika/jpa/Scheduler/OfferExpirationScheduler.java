@@ -46,11 +46,9 @@ public class OfferExpirationScheduler {
 
         for (Offer offer : expiredOffers) {
             try {
-                // Mark offer as EXPIRED
                 offer.setStatus(OfferStatus.EXPIRED);
                 offerRepository.save(offer);
 
-                // Update application status to REFUSED_OFFER with note
                 Long applicationId = offer.getApplication().getId();
                 applicationService.updateApplicationStatusWithNote(
                     applicationId,

@@ -8,6 +8,7 @@ import rs.ac.uns.ftn.informatika.jpa.Service.ApplicationService;
 import rs.ac.uns.ftn.informatika.jpa.Util.SecurityUtils;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/applications")
@@ -58,7 +59,7 @@ public class ApplicationController {
 
     @GetMapping("/cards/by-posting/{postingId}")
     @PreAuthorize("hasAnyAuthority('HR_MANAGER','HIRING_MANAGER')")
-    public List<ApplicationWithUserDTO> getCardsByPosting(@PathVariable Long postingId) {
+    public List<PostingApplicantDTO> getCardsByPosting(@PathVariable Long postingId) {
         return service.getCardsByPosting(postingId);
     }
 
@@ -70,5 +71,19 @@ public class ApplicationController {
     @PostMapping("/{id}/refuse")
     public ResponseEntity<ApplicationDTO> refuse(@PathVariable Long id, @RequestBody RefuseRequestDTO body) {
         return ResponseEntity.ok(service.refuse(id, body.getReason()));
+    }
+
+    @PostMapping("/bulk-refuse")
+    @PreAuthorize("hasAnyAuthority('HR_MANAGER','HIRING_MANAGER')")
+    public ResponseEntity<Void> bulkRefuse(@RequestBody BulkRefuseDTO dto) {
+        service.bulkRefuse(dto);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/bulk-score/{postingId}")
+    @PreAuthorize("hasAnyAuthority('HR_MANAGER', 'HIRING_MANAGER')")
+    public ResponseEntity<Map<String, Object>> bulkScore(@PathVariable Long postingId) {
+        int count = service.bulkScore(postingId);
+        return ResponseEntity.ok(Map.of("postingId", postingId, "scoredCount", count));
     }
 }

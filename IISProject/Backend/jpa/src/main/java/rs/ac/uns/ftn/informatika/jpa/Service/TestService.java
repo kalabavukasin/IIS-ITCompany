@@ -6,10 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import rs.ac.uns.ftn.informatika.jpa.Dto.SavedTestDTO;
-import rs.ac.uns.ftn.informatika.jpa.Dto.TestDetailsDTO;
-import rs.ac.uns.ftn.informatika.jpa.Dto.TestInviteRequestDTO;
-import rs.ac.uns.ftn.informatika.jpa.Dto.TestRefuseDTO;
+import rs.ac.uns.ftn.informatika.jpa.Dto.*;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.ApplicationStatus;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.TestInviteStatus;
 import rs.ac.uns.ftn.informatika.jpa.Model.Application;
@@ -30,14 +27,17 @@ public class TestService {
     private final TestInviteRepository testInviteRepository;
     private final ApplicationService applicationService;
     private final TestResultRepository testResultRepository;
+    private final EmailService emailService;
 
     public TestService(TestStorageService storage, TestInviteRepository testInviteRepository,
                        ApplicationService applicationService,
-                       TestResultRepository testResultRepository) {
+                       TestResultRepository testResultRepository,
+                       EmailService emailService) {
         this.storage = storage;
         this.testInviteRepository = testInviteRepository;
         this.applicationService = applicationService;
         this.testResultRepository = testResultRepository;
+        this.emailService = emailService;
     }
     @Transactional
     public SavedTestDTO createInvite(TestInviteRequestDTO req, MultipartFile file) throws IOException {
@@ -65,6 +65,12 @@ public class TestService {
 
         testInviteRepository.save(invite);
         applicationService.advanceWorkflowOnTestSent(app.getId(), req.triggeredById);
+
+        emailService.sendTestInviteNotification(
+                app.getCandidate().getEmail(),
+                app.getCandidate().getFirstName(),
+                app.getJobPosting().getRequestion().getName(),
+                req.activeUntil.toString());
         return saved;
     }
     @Transactional
@@ -103,8 +109,29 @@ public class TestService {
         testResult.setPassed(false);
         testInviteRepository.save(test);
         testResultRepository.save(testResult);
-        applicationService.refuse(applicationId,dto.reason);
+        // I added this and now mail will not be sent 2 times
+        applicationService.refuseNoEmail(applicationId, dto.reason);
+
+        Application app = applicationService.getApplicationById(applicationId).orElse(null);
+        if (app != null) {
+            emailService.sendTestRefusedWithScoreNotification(
+                    app.getCandidate().getEmail(),
+                    app.getCandidate().getFirstName(),
+                    app.getJobPosting().getRequestion().getName(),
+                    dto.score,
+                    dto.reason);
+        }
     }
+    @Transactional
+    public void bulkRefuseFromTest(BulkTestRefuseDTO dto) {
+        for (BulkTestScoreEntryDTO entry : dto.entries) {
+            TestRefuseDTO single = new TestRefuseDTO();
+            single.score = entry.score;
+            single.reason = dto.reason;
+            refuseWithScore(entry.applicationId, single);
+        }
+    }
+
     public Optional<TestDetailsDTO> getDetailsByApplicationId(Long applicationId) {
 
         return testInviteRepository.findByApplicationId(applicationId)
@@ -124,6 +151,40 @@ public class TestService {
 
         testInviteRepository.save(test);
         testResultRepository.save(testResult);
+    }
+
+    @Transactional
+    public void createBulkInvite(BulkTestInviteDTO dto,
+                                 MultipartFile file, Long triggeredById) throws IOException {
+        if (dto.applicationIds == null || dto.applicationIds.isEmpty())
+            throw new IllegalArgumentException("applicationIds is required.");
+        if (dto.type == null) throw new IllegalArgumentException("test type is required.");
+        if (dto.activeUntil == null) throw new IllegalArgumentException("activeUntil is required.");
+        if (file == null || file.isEmpty()) throw new IllegalArgumentException("file is required.");
+        if (dto.activeUntil.isBefore(OffsetDateTime.now()))
+            throw new IllegalArgumentException("activeUntil must be in the future.");
+
+        // Save file once, reuse the same URL for all invites
+        SavedTestDTO saved = storage.save(file);
+
+        for (Long appId : dto.applicationIds) {
+            Application app = applicationService.getApplicationById(appId)
+                    .orElseThrow(() -> new IllegalArgumentException("Application not found: " + appId));
+            TestInvite invite = new TestInvite();
+            invite.setApplication(app);
+            invite.setTestType(dto.type);
+            invite.setDeadline(dto.activeUntil);
+            invite.setStatus(TestInviteStatus.SENT);
+            invite.setTestUrl(saved.publicUrl);
+            testInviteRepository.save(invite);
+            applicationService.advanceWorkflowOnTestSent(appId, triggeredById);
+
+            emailService.sendTestInviteNotification(
+                    app.getCandidate().getEmail(),
+                    app.getCandidate().getFirstName(),
+                    app.getJobPosting().getRequestion().getName(),
+                    dto.activeUntil.toString());
+        }
     }
 
     private TestDetailsDTO mapToDto(TestInvite inv) {

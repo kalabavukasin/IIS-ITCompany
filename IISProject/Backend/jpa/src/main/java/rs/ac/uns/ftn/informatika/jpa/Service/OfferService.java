@@ -5,6 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import rs.ac.uns.ftn.informatika.jpa.Dto.BulkOfferCreateDTO;
+import rs.ac.uns.ftn.informatika.jpa.Dto.BulkTestScoreEntryDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.OfferCardDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.OfferCreateDTO;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.ApplicationStatus;
@@ -22,11 +24,17 @@ public class OfferService {
     private final OfferRepository offerRepo;
     private final ApplicationService applicationService;
     private final AuditService auditService;
+    private final TestService testService;
+    private final EmailService emailService;
 
-    public OfferService (OfferRepository offerRepo, ApplicationService applicationService, AuditService auditService) {
+    public OfferService(OfferRepository offerRepo, ApplicationService applicationService,
+                        AuditService auditService, TestService testService,
+                        EmailService emailService) {
         this.offerRepo = offerRepo;
         this.applicationService = applicationService;
         this.auditService = auditService;
+        this.testService = testService;
+        this.emailService = emailService;
     }
 
     @Transactional(readOnly = true)
@@ -108,9 +116,44 @@ public class OfferService {
     }
 
     @Transactional
+    public void bulkCreate(BulkOfferCreateDTO dto, Long triggeredById) {
+        for (Long appId : dto.applicationIds) {
+            Application app = applicationService.getApplicationById(appId)
+                    .orElseThrow(() -> new EntityNotFoundException("Application not found: " + appId));
+
+            if (dto.testScores != null) {
+                dto.testScores.stream()
+                        .filter(e -> e.applicationId.equals(appId))
+                        .findFirst()
+                        .ifPresent(e -> testService.verifyTestWithScore(appId, e.score));
+            }
+
+            Offer offer = new Offer();
+            offer.setApplication(app);
+            offer.setStartDate(dto.startDate);
+            offer.setValidUntil(dto.validUntil != null ? dto.validUntil : LocalDate.now().plusDays(14));
+            offer.setCreatedAt(OffsetDateTime.now());
+            offer.setStatus(OfferStatus.SENT);
+            offerRepo.save(offer);
+            applicationService.advanceWorkflowOnOfferMade(appId, triggeredById);
+
+            emailService.sendOfferNotification(
+                    app.getCandidate().getEmail(),
+                    app.getCandidate().getFirstName(),
+                    app.getJobPosting().getRequestion().getName(),
+                    offer.getStartDate().toString(),
+                    offer.getValidUntil().toString());
+        }
+    }
+
+    @Transactional
     public void createOffer(OfferCreateDTO dto, Long triggeredById) {
         Application app = applicationService.getApplicationById(dto.applicationId)
                 .orElseThrow(() -> new EntityNotFoundException("Application not found"));
+
+        if (dto.testScore != null) {
+            testService.verifyTestWithScore(dto.applicationId, dto.testScore);
+        }
 
         Offer offer = new Offer();
         offer.setApplication(app);
@@ -121,5 +164,12 @@ public class OfferService {
         offerRepo.save(offer);
 
         applicationService.advanceWorkflowOnOfferMade(dto.applicationId, triggeredById);
+
+        emailService.sendOfferNotification(
+                app.getCandidate().getEmail(),
+                app.getCandidate().getFirstName(),
+                app.getJobPosting().getRequestion().getName(),
+                offer.getStartDate().toString(),
+                offer.getValidUntil().toString());
     }
 }

@@ -3,6 +3,8 @@ package rs.ac.uns.ftn.informatika.jpa.Service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import rs.ac.uns.ftn.informatika.jpa.Dto.BulkInterviewScheduleDTO;
+import rs.ac.uns.ftn.informatika.jpa.Dto.BulkTestScoreEntryDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.InterviewDetailsDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.InterviewScheduleDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.InterviewToShowDTO;
@@ -16,6 +18,7 @@ import rs.ac.uns.ftn.informatika.jpa.Repository.InterviewParticipantRepository;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class InterviewService {
@@ -24,17 +27,20 @@ public class InterviewService {
     private final ApplicationService applicationService;
     private final UserService userService;
     private final TestService testService;
+    private final EmailService emailService;
 
     public InterviewService(InterviewRepository interviewRepository,
                             InterviewParticipantRepository participantRepository,
                             ApplicationService applicationService,
                             UserService userService,
-                            TestService testService) {
+                            TestService testService,
+                            EmailService emailService) {
         this.interviewRepository = interviewRepository;
         this.participantRepository = participantRepository;
         this.applicationService = applicationService;
         this.userService = userService;
         this.testService = testService;
+        this.emailService = emailService;
     }
     @Transactional
     public Interview scheduleInterview(InterviewScheduleDTO dto, Long triggeredByUserId) {
@@ -58,7 +64,6 @@ public class InterviewService {
 
         Interview savedInterview = interviewRepository.save(interview);
 
-        // List of participants
         List<InterviewParticipant> participants = new ArrayList<>();
 
         /* candidateParticipant = new InterviewParticipant();
@@ -67,7 +72,6 @@ public class InterviewService {
         candidateParticipant.setRoleOnInterview(InterviewParticipantRole.CANDIDATE);
         participants.add(candidateParticipant);*/
 
-        // adding the interviewer
         if (dto.interviewerId != null) {
             User interviewer = userService.getUserById(dto.interviewerId)
                     .orElseThrow(() -> new IllegalArgumentException("Interviewer not found"));
@@ -79,7 +83,6 @@ public class InterviewService {
             participants.add(interviewerParticipant);
         }
 
-        //adding observers
         if (dto.observerIds != null && !dto.observerIds.isEmpty()) {
             for (Long observerId : dto.observerIds) {
                 User observer = userService.getUserById(observerId)
@@ -95,10 +98,86 @@ public class InterviewService {
 
         participantRepository.saveAll(participants);
 
-        // Advance workflow to Interview phase
         applicationService.advanceWorkflowOnInterviewScheduled(dto.applicationId, triggeredByUserId);
 
+        emailService.sendInterviewScheduledNotification(
+                application.getCandidate().getEmail(),
+                application.getCandidate().getFirstName(),
+                application.getJobPosting().getRequestion().getName(),
+                dto.interviewType,
+                dto.scheduledAt.toString(),
+                dto.location);
+
         return savedInterview;
+    }
+
+    @Transactional
+    public void bulkSchedule(BulkInterviewScheduleDTO dto, Long triggeredByUserId) {
+        String batchId = UUID.randomUUID().toString();
+        int breakMin = (dto.breakMinutes != null) ? dto.breakMinutes : 15;
+        int gap = dto.durationMinutes + breakMin;
+
+        User interviewer = dto.interviewerId != null
+                ? userService.getUserById(dto.interviewerId)
+                    .orElseThrow(() -> new IllegalArgumentException("Interviewer not found"))
+                : null;
+
+        List<User> observers = new ArrayList<>();
+        if (dto.observerIds != null) {
+            for (Long obsId : dto.observerIds) {
+                observers.add(userService.getUserById(obsId)
+                        .orElseThrow(() -> new IllegalArgumentException("Observer not found: " + obsId)));
+            }
+        }
+
+        for (int i = 0; i < dto.applicationIds.size(); i++) {
+            Long appId = dto.applicationIds.get(i);
+            Application application = applicationService.getApplicationById(appId)
+                    .orElseThrow(() -> new IllegalArgumentException("Application not found: " + appId));
+
+            if (dto.testScores != null) {
+                dto.testScores.stream()
+                        .filter(e -> e.applicationId.equals(appId))
+                        .findFirst()
+                        .ifPresent(e -> testService.verifyTestWithScore(appId, e.score));
+            }
+
+            Interview interview = new Interview();
+            interview.setApplication(application);
+            interview.setType(InterviewType.valueOf(dto.interviewType));
+            interview.setScheduledAt(dto.firstScheduledAt.plusMinutes((long) i * gap));
+            interview.setDurationMinutes(dto.durationMinutes);
+            interview.setLocationOrLink(dto.location);
+            interview.setStatus(InterviewStatus.SCHEDULED);
+            interview.setBatchId(batchId);
+            Interview saved = interviewRepository.save(interview);
+
+            List<InterviewParticipant> participants = new ArrayList<>();
+            if (interviewer != null) {
+                InterviewParticipant ip = new InterviewParticipant();
+                ip.setInterview(saved);
+                ip.setUser(interviewer);
+                ip.setRoleOnInterview(InterviewParticipantRole.INTERVIEWER);
+                participants.add(ip);
+            }
+            for (User obs : observers) {
+                InterviewParticipant ip = new InterviewParticipant();
+                ip.setInterview(saved);
+                ip.setUser(obs);
+                ip.setRoleOnInterview(InterviewParticipantRole.OBSERVER);
+                participants.add(ip);
+            }
+            participantRepository.saveAll(participants);
+            applicationService.advanceWorkflowOnInterviewScheduled(appId, triggeredByUserId);
+
+            emailService.sendInterviewScheduledNotification(
+                    application.getCandidate().getEmail(),
+                    application.getCandidate().getFirstName(),
+                    application.getJobPosting().getRequestion().getName(),
+                    dto.interviewType,
+                    interview.getScheduledAt().toString(),
+                    dto.location);
+        }
     }
 
     public List<Interview> getInterviewsByApplication(Long applicationId) {

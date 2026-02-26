@@ -9,6 +9,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+import rs.ac.uns.ftn.informatika.jpa.Dto.BulkTestInviteDTO;
+import rs.ac.uns.ftn.informatika.jpa.Dto.BulkTestRefuseDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.SavedTestDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.TestInviteRequestDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.TestRefuseDTO;
@@ -40,6 +42,23 @@ public class TestController {
         dto.triggeredById = SecurityUtils.getCurrentUserId();
         return ResponseEntity.ok(service.createInvite(dto, file));
     }
+    @PostMapping(value = "/bulk-invite", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyAuthority('HR_MANAGER','HIRING_MANAGER')")
+    public ResponseEntity<Void> bulkInvite(
+            @RequestPart("data") BulkTestInviteDTO dto,
+            @RequestPart("file") MultipartFile file) throws IOException {
+        Long triggeredById = SecurityUtils.getCurrentUserId();
+        service.createBulkInvite(dto, file, triggeredById);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/bulk-refuse-with-score")
+    @PreAuthorize("hasAnyAuthority('HR_MANAGER','HIRING_MANAGER')")
+    public ResponseEntity<Void> bulkRefuseWithScore(@RequestBody BulkTestRefuseDTO dto) {
+        service.bulkRefuseFromTest(dto);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/{applicationId}/refuse-with-score")
     @PreAuthorize("hasAnyAuthority('HR_MANAGER','HIRING_MANAGER')")
     public ResponseEntity<Void> refuseWithScore(

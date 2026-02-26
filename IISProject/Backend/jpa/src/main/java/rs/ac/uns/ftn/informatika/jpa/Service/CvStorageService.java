@@ -76,7 +76,6 @@ public class CvStorageService {
         return new FileSystemResource(filePath.toFile());
     }
 
-    //Pravi apsolutnu od relativne putanje
     public Path resolveAbsolute(String relativePath) {
         Path root = Paths.get(uploadDir).toAbsolutePath().normalize();
         return root.resolve(Paths.get(relativePath).getFileName().toString());
@@ -96,7 +95,6 @@ public class CvStorageService {
             String text = handler.toString().trim();
             return text.isEmpty() ? null : text;
         } catch (Exception e) {
-            // Ne blokiramo registraciju
             return null;
         }
     }

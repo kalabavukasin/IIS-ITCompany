@@ -2,6 +2,8 @@ package rs.ac.uns.ftn.informatika.jpa.Service;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rs.ac.uns.ftn.informatika.jpa.Dto.*;
 import rs.ac.uns.ftn.informatika.jpa.Enumerations.ApplicationStatus;
@@ -27,6 +29,8 @@ public class ApplicationService {
     private final ApplicationStatusHistoryRepository historyRepo;
     private final UserService userService;
     private final AuditService auditService;
+    private final GeminiScoringService geminiScoringService;
+    private final EmailService emailService;
 
     public ApplicationService(ApplicationRepository appRepo, JobPostingService jobPostingService,
                               WorkflowStageRepository stageRepo,
@@ -34,7 +38,9 @@ public class ApplicationService {
                               WorkflowTransitionRepository transitionRepo,
                               ApplicationStatusHistoryRepository historyRepo,
                               UserService userService,
-                              AuditService auditService) {
+                              AuditService auditService,
+                              GeminiScoringService geminiScoringService,
+                              EmailService emailService) {
         this.appRepo = appRepo;
         this.jobPostingService = jobPostingService;
         this.stageRepo = stageRepo;
@@ -43,6 +49,8 @@ public class ApplicationService {
         this.historyRepo = historyRepo;
         this.userService = userService;
         this.auditService = auditService;
+        this.geminiScoringService = geminiScoringService;
+        this.emailService = emailService;
     }
     public Optional<Application> getApplicationById(Long id) {
         return appRepo.findById(id);
@@ -77,8 +85,23 @@ public class ApplicationService {
         a.setStatus(ApplicationStatus.ACTIVE);
         a.setAppliedAt(OffsetDateTime.now());
 
-        return ApplicationMapper.toDto(appRepo.save(a));
+        Application saved = appRepo.save(a);
+        Long savedId = saved.getId();
 
+        // Fire auto-scoring AFTER the transaction commits so the async thread
+        // is guaranteed to find the row in the database
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                geminiScoringService.autoScoreAsync(savedId);
+            }
+        });
+
+        return ApplicationMapper.toDto(saved);
+    }
+
+    public int bulkScore(Long postingId) {
+        return geminiScoringService.bulkScore(postingId);
     }
     @Transactional
     public List<ApplicationDTO> listMine(Long candidateId){
@@ -99,12 +122,19 @@ public class ApplicationService {
     }
 
     @Transactional
-    public List<ApplicationWithUserDTO> getCardsByPosting(Long postingId) {
-        List<ApplicationWithUserDTO> list = appRepo.findCardsByPostingId(postingId);
-        for (ApplicationWithUserDTO dto : list) {
+    public List<PostingApplicantDTO> getCardsByPosting(Long postingId) {
+        List<PostingApplicantDTO> list = appRepo.findApplicantsByPostingId(postingId);
+
+        // Load phases once — all candidates on the same posting share the same workflow
+        List<String> phases = list.isEmpty()
+                ? List.of()
+                : workflowService.listStageNamesForApplication(list.get(0).applicationId);
+
+        for (PostingApplicantDTO dto : list) {
+            dto.phases = phases;
             var prof = userService.getCandidateProfileById(dto.candidateId);
             if (prof.isPresent() && prof.get().getCvPath() != null) {
-                dto.cvDownloadUrl = org.springframework.web.servlet.support.ServletUriComponentsBuilder
+                dto.cvDownloadUrl = ServletUriComponentsBuilder
                         .fromCurrentContextPath()
                         .path("/api/cv/")
                         .path(prof.get().getCvPath())
@@ -155,18 +185,46 @@ public class ApplicationService {
         );
     }
     @Transactional
+    public void bulkRefuse(BulkRefuseDTO dto) {
+        for (Long id : dto.applicationIds) {
+            Application app = appRepo.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Application not found: " + id));
+            app.setNote(dto.reason);
+            app.setStatus(ApplicationStatus.REJECTED);
+            appRepo.save(app);
+
+            CandidateProfile candidate = app.getCandidate();
+            String jobTitle = app.getJobPosting().getRequestion().getName();
+            emailService.sendApplicationRefusedNotification(
+                    candidate.getEmail(), candidate.getFirstName(), jobTitle, dto.reason);
+        }
+    }
+
+    @Transactional
     public ApplicationDTO refuse(Long applicationId, String reason) {
 
         Application application = appRepo.findById(applicationId)
                 .orElseThrow(() -> new RuntimeException("Application not found " + applicationId));
 
-
         application.setNote(reason);
         application.setStatus(ApplicationStatus.REJECTED);
+        appRepo.save(application);
 
+        CandidateProfile candidate = application.getCandidate();
+        String jobTitle = application.getJobPosting().getRequestion().getName();
+        emailService.sendApplicationRefusedNotification(
+                candidate.getEmail(), candidate.getFirstName(), jobTitle, reason);
 
-        return ApplicationMapper.toDto(appRepo.save(application));
+        return ApplicationMapper.toDto(application);
+    }
 
+    @Transactional
+    public void refuseNoEmail(Long applicationId, String reason) {
+        Application application = appRepo.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found " + applicationId));
+        application.setNote(reason);
+        application.setStatus(ApplicationStatus.REJECTED);
+        appRepo.save(application);
     }
 
     @Transactional

@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationCardDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.ApplicationDetailsDTO;
+import rs.ac.uns.ftn.informatika.jpa.Enumerations.ApplicationStatus;
 import rs.ac.uns.ftn.informatika.jpa.Model.Application;
 
 import java.util.List;
@@ -170,7 +171,48 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     java.util.Optional<Long> findWorkflowIdByApplicationId(@Param("appId") Long appId);
 
     @Query("""
-        SELECT a FROM Application a 
+        SELECT a FROM Application a
+        JOIN FETCH a.candidate
+        JOIN FETCH a.jobPosting jp
+        JOIN FETCH jp.requestion
+        WHERE a.id = :id
+    """)
+    Optional<Application> findByIdWithCvAndRequestion(@Param("id") Long id);
+
+    @Query("""
+        SELECT a FROM Application a
+        JOIN FETCH a.candidate
+        JOIN FETCH a.jobPosting jp
+        JOIN FETCH jp.requestion
+        WHERE jp.id = :postingId
+          AND a.status = rs.ac.uns.ftn.informatika.jpa.Enumerations.ApplicationStatus.ACTIVE
+    """)
+    List<Application> findActiveByPostingIdWithCv(@Param("postingId") Long postingId);
+
+    @Query("""
+        SELECT new rs.ac.uns.ftn.informatika.jpa.Dto.PostingApplicantDTO(
+            a.id,
+            cast(a.status as string),
+            cs.name,
+            u.id,
+            concat(u.firstName, ' ', u.lastName),
+            a.autoAiScore,
+            a.autoAiScoreNote,
+            a.autoAiScoredAt,
+            a.bulkAiScore,
+            a.bulkAiScoreNote,
+            a.bulkAiScoredAt
+        )
+        FROM Application a
+        JOIN a.candidate u
+        LEFT JOIN a.currentStage cs
+        WHERE a.jobPosting.id = :postingId
+        ORDER BY a.id DESC
+    """)
+    List<rs.ac.uns.ftn.informatika.jpa.Dto.PostingApplicantDTO> findApplicantsByPostingId(@Param("postingId") Long postingId);
+
+    @Query("""
+        SELECT a FROM Application a
         WHERE a.appliedAt >= :startDate AND a.appliedAt <= :endDate
     """)
     List<Application> findApplicationsByDateRange(@Param("startDate") java.time.OffsetDateTime startDate, 

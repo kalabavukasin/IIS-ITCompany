@@ -43,7 +43,6 @@ public class JobPostingExpirationScheduler {
 
         for (JobPosting posting : expiredPostings) {
             try {
-                // Mark job posting as ARCHIVED
                 posting.setStatus(JobPostingStatus.ARCHIVED);
                 jobPostingRepository.save(posting);
 

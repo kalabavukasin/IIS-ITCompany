@@ -6,13 +6,13 @@ import java.util.List;
 
 public class InterviewScheduleDTO {
     public Long applicationId;
-    public BigDecimal testScore; // optional - only if coming from Test phase
+    public BigDecimal testScore; // optional
     public OffsetDateTime scheduledAt;
     public String location;
-    public String interviewType; // ONSITE, ONLINE, PHONE
+    public String interviewType;
     public Integer durationMinutes;
-    public Long interviewerId; // required - one interviewer
-    public List<Long> observerIds; // optional - multiple observers
+    public Long interviewerId; // required
+    public List<Long> observerIds; // optional
 
     public InterviewScheduleDTO() {}
 

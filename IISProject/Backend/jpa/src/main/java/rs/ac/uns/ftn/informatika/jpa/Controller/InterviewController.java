@@ -3,6 +3,7 @@ package rs.ac.uns.ftn.informatika.jpa.Controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import rs.ac.uns.ftn.informatika.jpa.Dto.BulkInterviewScheduleDTO;
 import rs.ac.uns.ftn.informatika.jpa.Dto.InterviewScheduleDTO;
 import rs.ac.uns.ftn.informatika.jpa.Model.Interview;
 import rs.ac.uns.ftn.informatika.jpa.Service.InterviewService;
@@ -23,6 +24,14 @@ public class InterviewController {
     public ResponseEntity<Void> scheduleInterview(@RequestBody InterviewScheduleDTO dto) {
         Long scheduledById = SecurityUtils.getCurrentUserId();
         Interview interview = interviewService.scheduleInterview(dto, scheduledById);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/bulk-schedule")
+    @PreAuthorize("hasAnyAuthority('HR_MANAGER', 'HIRING_MANAGER')")
+    public ResponseEntity<Void> bulkSchedule(@RequestBody BulkInterviewScheduleDTO dto) {
+        Long scheduledById = SecurityUtils.getCurrentUserId();
+        interviewService.bulkSchedule(dto, scheduledById);
         return ResponseEntity.noContent().build();
     }
 

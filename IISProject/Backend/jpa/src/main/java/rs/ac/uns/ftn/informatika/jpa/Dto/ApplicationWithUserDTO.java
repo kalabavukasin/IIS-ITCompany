@@ -18,15 +18,7 @@ public class ApplicationWithUserDTO {
     public String candidateName;
     public LocalDate openUntil;
 
-    public String cvDownloadUrl; // populated only for by-posting endpoint
-
-    // AI scoring fields — null until scoring is run
-    public Integer autoAiScore;
-    public String autoAiScoreNote;
-    public OffsetDateTime autoAiScoredAt;
-    public Integer bulkAiScore;
-    public String bulkAiScoreNote;
-    public OffsetDateTime bulkAiScoredAt;
+    public String cvDownloadUrl;
 
     public ApplicationWithUserDTO(
             Long applicationId,

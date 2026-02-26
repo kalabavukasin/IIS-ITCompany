@@ -50,11 +50,9 @@ public class TestInviteExpirationScheduler {
 
         for (TestInvite test : expiredTests) {
             try {
-                // Mark test as EXPIRED
                 test.setStatus(TestInviteStatus.EXPIRED);
                 testInviteRepository.save(test);
 
-                // Reject the application with reason
                 Long applicationId = test.getApplication().getId();
                 applicationService.refuse(applicationId, "Test deadline expired");
 

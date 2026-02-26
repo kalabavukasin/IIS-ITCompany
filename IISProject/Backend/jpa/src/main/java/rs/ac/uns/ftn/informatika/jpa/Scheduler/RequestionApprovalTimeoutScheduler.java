@@ -17,7 +17,6 @@ import java.util.List;
 public class RequestionApprovalTimeoutScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(RequestionApprovalTimeoutScheduler.class);
-    // Fallback: used only when a requestion has no reviewDeadline set
     private static final int FALLBACK_TIMEOUT_DAYS = 30;
 
     private final RequestionRepository requestionRepository;
